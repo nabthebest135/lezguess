@@ -71,7 +71,7 @@ router.get('/api/leaderboard/daily', async (_req, res): Promise<void> => {
 // Submit score endpoint
 router.post('/api/score/submit', async (req, res): Promise<void> => {
   try {
-    const { score, gameMode, username } = req.body;
+    const { score, gameMode, username, checkOnly } = req.body;
     
     if (gameMode === 'daily') {
       const today = new Date().toISOString().split('T')[0];
@@ -81,6 +81,12 @@ router.post('/api/score/submit', async (req, res): Promise<void> => {
       const existingScore = await redis.get(userKey);
       if (existingScore) {
         res.json({ status: 'already_played', message: 'You already played today!' });
+        return;
+      }
+      
+      // If this is just a check, return success
+      if (checkOnly) {
+        res.json({ status: 'can_play' });
         return;
       }
       

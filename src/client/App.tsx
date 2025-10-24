@@ -984,7 +984,8 @@ export const App = () => {
         const leaderboardData = await leaderboardResponse.json();
         setLeaderboard(leaderboardData.data || []);
       } else if (data.status === 'already_played') {
-        alert(data.message);
+        // Show message in UI instead of alert (which is blocked)
+        setCurrentScreen('daily-complete');
       }
     } catch (error) {
       console.error('Failed to update leaderboard:', error);
@@ -1168,9 +1169,30 @@ export const App = () => {
             </button>
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 setGameMode('daily');
-                startNewRound();
+                // Check if already played today before starting
+                try {
+                  const response = await fetch('/api/score/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                      score: 0, 
+                      gameMode: 'daily', 
+                      username: username || 'Anonymous',
+                      checkOnly: true 
+                    })
+                  });
+                  const data = await response.json();
+                  
+                  if (data.status === 'already_played') {
+                    setCurrentScreen('daily-complete');
+                  } else {
+                    startNewRound();
+                  }
+                } catch (error) {
+                  startNewRound(); // Fallback to allow play
+                }
               }}
               className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg text-lg sm:text-xl transition-all transform hover:scale-105"
             >
@@ -1654,6 +1676,48 @@ export const App = () => {
                 Play Daily Challenge
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Daily Challenge Complete Screen
+  if (currentScreen === 'daily-complete') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-blue-900 text-white p-4">
+        <div className="flex flex-col justify-center items-center min-h-screen">
+          <div className="text-center mb-8">
+            <div className="mb-6">
+              <span className="text-8xl">🎯</span>
+            </div>
+            <h1 className="text-4xl sm:text-6xl font-bold mb-4 text-purple-400">
+              Daily Challenge Complete!
+            </h1>
+            <p className="text-lg sm:text-xl mb-4 text-gray-300">
+              You've already played today's challenge.
+            </p>
+            <p className="text-sm sm:text-lg mb-8 text-gray-400">
+              Come back tomorrow for a new daily challenge!
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => setCurrentScreen('leaderboard')}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors"
+            >
+              🏆 View Leaderboard
+            </button>
+            <button
+              onClick={() => {
+                setGameMode('solo');
+                setCurrentScreen('menu');
+              }}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors"
+            >
+              🎮 Play Solo Mode
+            </button>
           </div>
         </div>
       </div>
