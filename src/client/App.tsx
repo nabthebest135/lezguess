@@ -716,6 +716,7 @@ export const App = () => {
   const [, setAchievements] = useState<string[]>([]);
   const [isLoadingRedditData, setIsLoadingRedditData] = useState(false);
   const [, setLiveSubredditData] = useState<any>(null);
+  const [dailyCompleted, setDailyCompleted] = useState(false);
 
   // Initialize username from localStorage on component mount
   useEffect(() => {
@@ -866,7 +867,13 @@ export const App = () => {
     return () => clearInterval(interval);
   }, [timerActive, gameTimer, currentScreen]);
 
-  const startNewRound = () => {
+  const startNewRound = async () => {
+    // For daily challenge, only allow one round per day
+    if (gameMode === 'daily' && dailyCompleted) {
+      setCurrentScreen('daily-complete');
+      return;
+    }
+
     const randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
     setCurrentPost(randomPost);
     setCurrentScreen('game');
@@ -961,6 +968,7 @@ export const App = () => {
     // Update leaderboard via real API
     if (gameMode === 'daily') {
       updateDailyLeaderboard(score + roundScore);
+      setDailyCompleted(true); // Mark daily as completed after first submission
     }
   };
 
@@ -1408,12 +1416,22 @@ export const App = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={startNewRound}
-              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-            >
-              Next Round
-            </button>
+            {gameMode !== 'daily' && (
+              <button
+                onClick={startNewRound}
+                className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Next Round
+              </button>
+            )}
+            {gameMode === 'daily' && (
+              <button
+                onClick={() => setCurrentScreen('leaderboard')}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                🏆 View Leaderboard
+              </button>
+            )}
             <button
               onClick={() => {
                 setRound(0);
