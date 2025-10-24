@@ -51,7 +51,7 @@ Built with modern web technologies on Reddit's Developer Platform:
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/lezguess.git
+git clone https://github.com/nabthebest135/lezguess.git
 cd lezguess
 
 # Install dependencies
