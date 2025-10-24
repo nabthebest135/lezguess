@@ -724,6 +724,9 @@ export const App = () => {
       setUsername(savedUsername);
       setCurrentScreen('menu');
     }
+    
+    // Load real community stats
+    fetchCommunityStats();
   }, []);
 
   // Real multiplayer using Redis polling (no WebSockets on Devvit)
@@ -825,6 +828,21 @@ export const App = () => {
     }
   };
 
+  const fetchRedditData = async (subreddit: string) => {
+    setIsLoadingRedditData(true);
+    try {
+      const response = await fetch(`/api/reddit-data/${subreddit}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLiveSubredditData(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Reddit data:', error);
+    } finally {
+      setIsLoadingRedditData(false);
+    }
+  };
+
   // Report game completion to update real stats
   const reportGameCompletion = async (score: number, isPerfect: boolean) => {
     try {
@@ -874,6 +892,9 @@ export const App = () => {
     setCurrentScreen('game');
     setGuessedSubreddit('');
     setGuessedYear(2020);
+
+    // Fetch real Reddit data for this subreddit
+    fetchRedditData(randomPost.subreddit);
 
     // Start timer for competitive modes
     if (gameMode === 'multiplayer' || gameMode === 'daily') {
@@ -963,13 +984,31 @@ export const App = () => {
     }
   };
 
-  const updateDailyLeaderboard = (finalScore: number) => {
-    const newEntry = {
-      username: username || 'Anonymous',
-      score: finalScore,
-      timestamp: new Date().toISOString()
-    };
-    setLeaderboard(prev => [...prev, newEntry].sort((a, b) => b.score - a.score).slice(0, 10));
+  const updateDailyLeaderboard = async (finalScore: number) => {
+    try {
+      // Submit score to backend
+      const response = await fetch('/api/score/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          score: finalScore, 
+          gameMode, 
+          username: username || 'Anonymous' 
+        })
+      });
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Fetch updated leaderboard
+        const leaderboardResponse = await fetch('/api/leaderboard/daily');
+        const leaderboardData = await leaderboardResponse.json();
+        setLeaderboard(leaderboardData.data || []);
+      } else if (data.status === 'already_played') {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('Failed to update leaderboard:', error);
+    }
   };
 
   const registerUser = () => {
@@ -980,39 +1019,49 @@ export const App = () => {
     }
   };
 
-  const createMultiplayerRoom = () => {
-    const newRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const room = {
-      code: newRoomCode,
-      host: username,
-      players: [{ username, score: 0, ready: false }],
-      currentPost: null,
-      gameStarted: false
-    };
-    setMultiplayerRoom(room);
-    setRoomCode(newRoomCode);
-    setPlayersInRoom([{ username, score: 0, ready: false }]);
-    setIsRoomHost(true);
-    setCurrentScreen('multiplayer-lobby');
+  const createMultiplayerRoom = async () => {
+    try {
+      const response = await fetch('/api/multiplayer/create-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setMultiplayerRoom(data.room);
+        setRoomCode(data.room.code);
+        setPlayersInRoom(data.room.players);
+        setIsRoomHost(true);
+        setCurrentScreen('multiplayer-lobby');
+      }
+    } catch (error) {
+      console.error('Failed to create room:', error);
+    }
   };
 
-  const joinMultiplayerRoom = (code: string) => {
-    // Simulate joining a room
-    const room = {
-      code: code.toUpperCase(),
-      host: 'SomeHost',
-      players: [
-        { username: 'SomeHost', score: 0, ready: true },
-        { username, score: 0, ready: false }
-      ],
-      currentPost: null,
-      gameStarted: false
-    };
-    setMultiplayerRoom(room);
-    setRoomCode(code.toUpperCase());
-    setPlayersInRoom(room.players);
-    setIsRoomHost(false);
-    setCurrentScreen('multiplayer-lobby');
+  const joinMultiplayerRoom = async (code: string) => {
+    try {
+      const response = await fetch('/api/multiplayer/join-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomCode: code.toUpperCase(), username })
+      });
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setMultiplayerRoom(data.room);
+        setRoomCode(data.room.code);
+        setPlayersInRoom(data.room.players);
+        setIsRoomHost(data.room.host === username);
+        setCurrentScreen('multiplayer-lobby');
+      } else {
+        alert(data.message || 'Failed to join room');
+      }
+    } catch (error) {
+      console.error('Failed to join room:', error);
+      alert('Failed to join room');
+    }
   };
 
   const startMultiplayerGame = () => {
