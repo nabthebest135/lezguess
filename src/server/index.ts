@@ -74,11 +74,22 @@ router.post('/api/score/submit', async (req, res): Promise<void> => {
     const { score, gameMode, username, checkOnly } = req.body;
     
     if (gameMode === 'daily') {
+      // Validate username
+      if (!username || username.trim() === '') {
+        res.status(400).json({ status: 'error', message: 'Username is required for daily challenge' });
+        return;
+      }
+      
       const today = new Date().toISOString().split('T')[0];
-      const userKey = `daily_score_${today}_${username}`;
+      const cleanUsername = username.trim();
+      const userKey = `daily_score_${today}_${cleanUsername}`;
+      
+      console.log(`Daily check for user: "${cleanUsername}", key: ${userKey}, checkOnly: ${checkOnly}`);
       
       // Check if user already played today
       const existingScore = await redis.get(userKey);
+      console.log(`Existing score found: ${existingScore}`);
+      
       if (existingScore) {
         res.json({ status: 'already_played', message: 'You already played today!' });
         return;
@@ -92,13 +103,14 @@ router.post('/api/score/submit', async (req, res): Promise<void> => {
       
       // Save user's daily score
       await redis.set(userKey, score.toString());
+      console.log(`Saved daily score for ${cleanUsername}: ${score}`);
       
       // Update leaderboard
       const leaderboardData = await redis.get('daily_leaderboard') || '[]';
       const leaderboard = JSON.parse(leaderboardData);
       
       leaderboard.push({
-        username: username || 'Anonymous',
+        username: cleanUsername || 'Anonymous',
         score,
         timestamp: new Date().toISOString(),
       });

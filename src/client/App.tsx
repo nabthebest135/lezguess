@@ -1,5 +1,33 @@
 import { useState, useEffect } from 'react';
 
+// Common subreddits for generating multiple choice options
+const COMMON_SUBREDDITS = [
+  'gaming', 'AskReddit', 'funny', 'pics', 'news', 'worldnews', 'todayilearned',
+  'movies', 'music', 'videos', 'IAmA', 'science', 'technology', 'politics',
+  'sports', 'television', 'books', 'food', 'DIY', 'LifeProTips', 'showerthoughts',
+  'mildlyinteresting', 'oddlysatisfying', 'wholesomememes', 'dankmemes',
+  'relationship_advice', 'tifu', 'confession', 'unpopularopinion', 'changemyview',
+  'explainlikeimfive', 'nostupidquestions', 'OutOfTheLoop', 'bestof',
+  'StarWarsBattlefront', 'circlejerk', 'WhatsInThisThing', 'legaladvice'
+];
+
+// Generate multiple choice options for a post
+const generateMultipleChoice = (correctSubreddit: string): string[] => {
+  const options = [correctSubreddit];
+  const availableOptions = COMMON_SUBREDDITS.filter(sub => sub !== correctSubreddit);
+  
+  // Add 3 random wrong options
+  while (options.length < 4) {
+    const randomSub = availableOptions[Math.floor(Math.random() * availableOptions.length)];
+    if (!options.includes(randomSub)) {
+      options.push(randomSub);
+    }
+  }
+  
+  // Shuffle the options
+  return options.sort(() => Math.random() - 0.5);
+};
+
 // Mystery Reddit posts for the guessing game - Legendary Reddit moments
 const MYSTERY_POSTS = [
   {
@@ -687,6 +715,7 @@ const MYSTERY_POSTS = [
 export const App = () => {
   const [currentPost, setCurrentPost] = useState<any>(null);
   const [guessedSubreddit, setGuessedSubreddit] = useState('');
+  const [subredditOptions, setSubredditOptions] = useState<string[]>([]);
   const [guessedYear, setGuessedYear] = useState(2020);
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
@@ -725,7 +754,7 @@ export const App = () => {
       setUsername(savedUsername);
       setCurrentScreen('menu');
     }
-    
+
     // Load real community stats
     fetchCommunityStats();
   }, []);
@@ -879,6 +908,9 @@ export const App = () => {
     setCurrentScreen('game');
     setGuessedSubreddit('');
     setGuessedYear(2020);
+    
+    // Generate multiple choice options for subreddit
+    setSubredditOptions(generateMultipleChoice(randomPost.subreddit));
 
     // Fetch real Reddit data for this subreddit
     fetchRedditData(randomPost.subreddit);
@@ -978,14 +1010,14 @@ export const App = () => {
       const response = await fetch('/api/score/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          score: finalScore, 
-          gameMode, 
-          username: username || 'Anonymous' 
+        body: JSON.stringify({
+          score: finalScore,
+          gameMode,
+          username: username || 'Anonymous'
         })
       });
       const data = await response.json();
-      
+
       if (data.status === 'success') {
         // Fetch updated leaderboard
         const leaderboardResponse = await fetch('/api/leaderboard/daily');
@@ -1016,7 +1048,7 @@ export const App = () => {
         body: JSON.stringify({ username })
       });
       const data = await response.json();
-      
+
       if (data.status === 'success') {
         setMultiplayerRoom(data.room);
         setRoomCode(data.room.code);
@@ -1037,7 +1069,7 @@ export const App = () => {
         body: JSON.stringify({ roomCode: code.toUpperCase(), username })
       });
       const data = await response.json();
-      
+
       if (data.status === 'success') {
         setMultiplayerRoom(data.room);
         setRoomCode(data.room.code);
@@ -1184,15 +1216,15 @@ export const App = () => {
                   const response = await fetch('/api/score/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                      score: 0, 
-                      gameMode: 'daily', 
+                    body: JSON.stringify({
+                      score: 0,
+                      gameMode: 'daily',
                       username: username || 'Anonymous',
-                      checkOnly: true 
+                      checkOnly: true
                     })
                   });
                   const data = await response.json();
-                  
+
                   if (data.status === 'already_played') {
                     setCurrentScreen('daily-complete');
                   } else {
@@ -1534,14 +1566,28 @@ export const App = () => {
           {/* Guess Form */}
           <div className="grid gap-6 mb-8">
             <div>
-              <label className="block text-base sm:text-lg mb-2 text-gray-300">Guess the subreddit:</label>
-              <input
-                type="text"
-                placeholder="e.g. gaming, AskReddit, funny"
-                value={guessedSubreddit}
-                onChange={(e) => setGuessedSubreddit(e.target.value)}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-orange-500 focus:outline-none text-lg"
-              />
+              <label className="block text-base sm:text-lg mb-4 text-gray-300">Guess the subreddit:</label>
+              {subredditOptions.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {subredditOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setGuessedSubreddit(option)}
+                      className={`p-4 rounded-lg text-lg font-medium transition-all transform hover:scale-105 ${
+                        guessedSubreddit === option
+                          ? 'bg-orange-600 text-white border-2 border-orange-400'
+                          : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:bg-gray-600 hover:border-gray-500'
+                      }`}
+                    >
+                      r/{option}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-400 p-4">
+                  Loading options...
+                </div>
+              )}
             </div>
 
             <div>
