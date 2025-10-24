@@ -696,9 +696,9 @@ export const App = () => {
   const [streak, setStreak] = useState(0);
   const [showAchievement, setShowAchievement] = useState<string | null>(null);
   const [communityStats, setCommunityStats] = useState({
-    totalPlayers: 1337,
-    postsGuessed: 42069,
-    perfectScores: 420
+    totalPlayers: 0,
+    postsGuessed: 0,
+    perfectScores: 0
   });
   const [recentGuesses, setRecentGuesses] = useState<any[]>([]);
   const [currentScreen, setCurrentScreen] = useState('registration'); // 'registration', 'menu', 'game', 'leaderboard', 'community', 'result', 'multiplayer-lobby'
@@ -772,28 +772,8 @@ export const App = () => {
       roomCode: multiplayerRoom?.code
     };
 
-    // Simulate network delay
-    setTimeout(() => {
-      setMultiplayerGuesses(prev => [...prev, guessData]);
-
-      // Simulate other players' guesses
-      const otherPlayers = playersInRoom.filter(p => p.username !== username);
-      otherPlayers.forEach((player, index) => {
-        setTimeout(() => {
-          const randomGuess = {
-            username: player.username,
-            guess: {
-              subreddit: ['gaming', 'AskReddit', 'funny', 'pics'][Math.floor(Math.random() * 4)],
-              year: 2010 + Math.floor(Math.random() * 14)
-            },
-            score: Math.floor(Math.random() * 2000),
-            timestamp: Date.now(),
-            roomCode: multiplayerRoom?.code
-          };
-          setMultiplayerGuesses(prev => [...prev, randomGuess]);
-        }, (index + 1) * 2000); // Stagger other players' responses
-      });
-    }, 1000);
+    // Add to multiplayer guesses immediately (real players will be synced via polling)
+    setMultiplayerGuesses(prev => [...prev, guessData]);
   };
 
   // Fetch live Reddit data for enhanced experience
@@ -978,7 +958,7 @@ export const App = () => {
       submitMultiplayerGuess(guess, roundScore);
     }
 
-    // Update leaderboard (simulate API call)
+    // Update leaderboard via real API
     if (gameMode === 'daily') {
       updateDailyLeaderboard(score + roundScore);
     }
@@ -1502,7 +1482,7 @@ export const App = () => {
                 </div>
                 <p className="text-xl font-medium mb-4 text-white">"{currentPost.content}"</p>
                 <div className="flex gap-4 text-sm text-gray-400">
-                  <span>💬 {Math.floor(Math.random() * 1000)} comments</span>
+                  <span>💬 {currentPost.upvotes > 0 ? Math.floor(currentPost.upvotes * 0.1) : Math.floor(Math.abs(currentPost.upvotes) * 0.05)} comments</span>
                   <span>🔗 Share</span>
                   <span>💾 Save</span>
                   <span>🏆 Award</span>
