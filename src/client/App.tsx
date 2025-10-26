@@ -1,5 +1,44 @@
 import { useState, useEffect } from 'react';
 
+// Add custom CSS for the year slider
+const sliderStyles = `
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 5px;
+    background: #374151;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  
+  .slider:hover {
+    opacity: 1;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f97316;
+    cursor: pointer;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f97316;
+    cursor: pointer;
+    border: none;
+  }
+`;
+
+// CSS will be injected in useEffect
+
 // Common subreddits for generating multiple choice options
 const COMMON_SUBREDDITS = [
   'gaming', 'AskReddit', 'funny', 'pics', 'news', 'worldnews', 'todayilearned',
@@ -13,17 +52,18 @@ const COMMON_SUBREDDITS = [
 
 // Generate multiple choice options for a post
 const generateMultipleChoice = (correctSubreddit: string): string[] => {
+  if (!correctSubreddit) return [];
   const options = [correctSubreddit];
   const availableOptions = COMMON_SUBREDDITS.filter(sub => sub !== correctSubreddit);
-  
+
   // Add 3 random wrong options
-  while (options.length < 4) {
+  while (options.length < 4 && availableOptions.length > 0) {
     const randomSub = availableOptions[Math.floor(Math.random() * availableOptions.length)];
-    if (!options.includes(randomSub)) {
+    if (randomSub && !options.includes(randomSub)) {
       options.push(randomSub);
     }
   }
-  
+
   // Shuffle the options
   return options.sort(() => Math.random() - 0.5);
 };
@@ -32,37 +72,37 @@ const generateMultipleChoice = (correctSubreddit: string): string[] => {
 const MYSTERY_POSTS = [
   {
     id: 1,
-    content: "The intent is to provide players with a sense of pride and accomplishment for unlocking different heroes.",
+    content: "The intent is to provide players with a sense of pride and accomplishment for unlocking different heroes. As for cost, we selected initial values based upon data from the Open Beta and other adjustments made to milestone rewards before launch. Among other things, we're looking at average per-player credit earn rates on a daily basis, and we'll be making constant adjustments to ensure that players have challenges that are compelling, rewarding, and of course attainable via gameplay.",
     subreddit: "StarWarsBattlefront",
     year: 2017,
-    context: "EA's response to microtransactions controversy",
+    context: "EA's response to microtransactions controversy - became most downvoted comment in Reddit history",
     upvotes: -667000,
     difficulty: "easy"
   },
   {
     id: 2,
-    content: "We did it Reddit! Boston bomber caught!",
+    content: "BREAKING: We did it Reddit! Boston bomber caught! The FBI has confirmed that the suspect has been apprehended after an intensive manhunt. This is a victory for crowdsourced investigation and shows the power of the internet community working together to solve crimes.",
     subreddit: "news",
     year: 2013,
-    context: "Reddit's misidentification during Boston Marathon bombing",
+    context: "Reddit's infamous misidentification during Boston Marathon bombing investigation",
     upvotes: 3000,
     difficulty: "hard"
   },
   {
     id: 3,
-    content: "Keanu Reeves is breathtaking!",
+    content: "Holy shit, Keanu Reeves just walked out on stage at E3! He's in Cyberpunk 2077! When someone in the audience yelled 'You're breathtaking!' he pointed back and said 'No, you're breathtaking! You're all breathtaking!' This man is a treasure and CD Projekt Red just won E3.",
     subreddit: "gaming",
     year: 2019,
-    context: "E3 Cyberpunk 2077 announcement reaction",
+    context: "E3 Cyberpunk 2077 announcement with Keanu Reeves surprise appearance",
     upvotes: 89000,
     difficulty: "medium"
   },
   {
     id: 4,
-    content: "I also choose this guy's dead wife.",
+    content: "Question: 'If you could have sex with one person from history, who would it be?' Top answer: 'My wife. She passed away two years ago from cancer and I miss her every day.' Reply: 'I also choose this guy's dead wife.' *gets 45k upvotes*",
     subreddit: "AskReddit",
     year: 2017,
-    context: "Legendary dark humor response",
+    context: "Legendary dark humor response that became Reddit folklore",
     upvotes: 45000,
     difficulty: "medium"
   },
@@ -248,19 +288,19 @@ const MYSTERY_POSTS = [
   },
   {
     id: 25,
-    content: "Poop knife",
+    content: "My family poops big. Like, really big. So big that our toilet would get clogged regularly. My dad kept an old rusty kitchen knife in the bathroom to chop up the turds so they would flush. We called it the poop knife. I thought every family had one until I was 22 and asked my girlfriend's family where their poop knife was. The silence was deafening.",
     subreddit: "confession",
     year: 2018,
-    context: "The most disturbing family secret",
+    context: "The most disturbing family secret that became a Reddit legend",
     upvotes: 55000,
     difficulty: "medium"
   },
   {
     id: 26,
-    content: "Coconut",
+    content: "TIFU by using a coconut as a... personal pleasure device. I'm a 16-year-old male and discovered that a coconut with a hole drilled in it makes for an interesting experience. After a week of use, I noticed a strange smell. When I cracked it open, it was full of rotting coconut flesh and maggots. I may have given myself an infection. Don't use coconuts, people.",
     subreddit: "tifu",
     year: 2017,
-    context: "TIFU by using a coconut",
+    context: "The infamous coconut TIFU that traumatized Reddit",
     upvotes: 85000,
     difficulty: "easy"
   },
@@ -639,10 +679,10 @@ const MYSTERY_POSTS = [
   },
   {
     id: 68,
-    content: "Steve Irwin crocodile hunter",
+    content: "TIL Steve Irwin's last words were 'Don't worry, they usually don't swim backwards.' He was filming a documentary about stingrays when one struck him in the chest. Even in his final moments, he was trying to educate and reassure others. The Crocodile Hunter died doing what he loved - sharing his passion for wildlife with the world.",
     subreddit: "todayilearned",
     year: 2011,
-    context: "Remembering the legendary wildlife educator",
+    context: "Remembering the legendary wildlife educator Steve Irwin",
     upvotes: 92000,
     difficulty: "medium"
   },
@@ -685,10 +725,10 @@ const MYSTERY_POSTS = [
   },
   {
     id: 73,
-    content: "SpaceX Falcon Heavy launch",
+    content: "HOLY SHIT! Elon Musk actually did it! The Falcon Heavy just launched successfully and they put a Tesla Roadster in space with a mannequin in a spacesuit listening to David Bowie's 'Space Oddity.' The two side boosters landed simultaneously back on Earth. This is the most Elon Musk thing ever and I'm crying tears of joy watching this live stream.",
     subreddit: "SpaceX",
     year: 2018,
-    context: "Tesla Roadster in space with Starman",
+    context: "SpaceX Falcon Heavy debut launch with Tesla Roadster and Starman",
     upvotes: 156000,
     difficulty: "easy"
   },
@@ -722,7 +762,7 @@ export const App = () => {
   const [lastScore, setLastScore] = useState(0);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [gameMode, setGameMode] = useState('solo'); // 'solo', 'daily', 'multiplayer'
-  const [streak, setStreak] = useState(0);
+
   const [showAchievement, setShowAchievement] = useState<string | null>(null);
   const [communityStats, setCommunityStats] = useState({
     totalPlayers: 0,
@@ -730,7 +770,7 @@ export const App = () => {
     perfectScores: 0
   });
   const [recentGuesses, setRecentGuesses] = useState<any[]>([]);
-  const [currentScreen, setCurrentScreen] = useState('registration'); // 'registration', 'menu', 'game', 'leaderboard', 'community', 'result', 'multiplayer-lobby'
+  const [currentScreen, setCurrentScreen] = useState('registration'); // 'registration', 'menu', 'game', 'leaderboard', 'community', 'result', 'multiplayer-lobby', 'tutorial'
   const [username, setUsername] = useState('');
   const [multiplayerRoom, setMultiplayerRoom] = useState<any>(null);
   const [roomCode, setRoomCode] = useState('');
@@ -738,72 +778,223 @@ export const App = () => {
   const [isRoomHost, setIsRoomHost] = useState(false);
   const [gameStartCountdown, setGameStartCountdown] = useState(0);
   const [multiplayerGuesses, setMultiplayerGuesses] = useState<any[]>([]);
+  const [multiplayerRound, setMultiplayerRound] = useState(1);
+  const [waitingForOthers, setWaitingForOthers] = useState(false);
+  const [allPlayersSubmitted, setAllPlayersSubmitted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [gameTimer, setGameTimer] = useState(60); // 60 seconds per round
   const [timerActive, setTimerActive] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
   const [, setShowResult] = useState(false);
   const [, setAchievements] = useState<string[]>([]);
   const [isLoadingRedditData, setIsLoadingRedditData] = useState(false);
   const [, setLiveSubredditData] = useState<any>(null);
   const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+  const [lastGuessCorrect, setLastGuessCorrect] = useState<boolean | null>(null);
+  const [lastGuessPartial, setLastGuessPartial] = useState(false);
 
-  // Initialize username from localStorage on component mount
+  // Load player data from server
+  const loadPlayerData = async () => {
+    try {
+      const response = await fetch('/api/player/load');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'success') {
+          setBestStreak(result.data.bestStreak);
+          setTotalCorrect(result.data.totalCorrect);
+          setCurrentStreak(result.data.currentStreak);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load player data:', error);
+    }
+  };
+
+  // Save player data to server
+  const savePlayerData = async () => {
+    try {
+      await fetch('/api/player/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bestStreak,
+          totalCorrect,
+          currentStreak
+        })
+      });
+    } catch (error) {
+      console.error('Failed to save player data:', error);
+    }
+  };
+
+  // Initialize app and load player data
   useEffect(() => {
-    const savedUsername = localStorage.getItem('lezguess_username');
-    if (savedUsername && savedUsername.trim().length >= 3) {
-      setUsername(savedUsername);
-      setCurrentScreen('menu');
+    // Inject CSS styles
+    if (typeof document !== 'undefined' && document.head) {
+      const styleSheet = document.createElement('style');
+      styleSheet.textContent = sliderStyles;
+      document.head.appendChild(styleSheet);
     }
 
-    // Load real community stats
+    // Initialize with Reddit username and load player data
+    const initializeApp = async () => {
+      try {
+        const response = await fetch('/api/init');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.username && data.username !== 'anonymous') {
+            setUsername(data.username);
+            setCurrentScreen('menu');
+            // Load player data from server
+            await loadPlayerData();
+          } else {
+            // Fallback to localStorage for username
+            const savedUsername = localStorage.getItem('lezguess_username');
+            if (savedUsername && savedUsername.trim().length >= 3) {
+              setUsername(savedUsername);
+              setCurrentScreen('menu');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        // Fallback to localStorage
+        const savedUsername = localStorage.getItem('lezguess_username');
+        if (savedUsername && savedUsername.trim().length >= 3) {
+          setUsername(savedUsername);
+          setCurrentScreen('menu');
+        }
+      }
+    };
+
+    initializeApp();
     fetchCommunityStats();
   }, []);
 
-  // Real multiplayer using Redis polling (no WebSockets on Devvit)
+  // Real multiplayer using faster Redis polling with heartbeat
   useEffect(() => {
     let pollInterval: NodeJS.Timeout;
+    let heartbeatInterval: NodeJS.Timeout;
 
-    if (gameMode === 'multiplayer' && multiplayerRoom) {
+    if (multiplayerRoom) {
       setIsConnected(true);
 
-      // Poll for room updates every 2 seconds
+      // Send heartbeat every 5 seconds to keep player active
+      heartbeatInterval = setInterval(async () => {
+        try {
+          await fetch('/api/multiplayer/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomCode: multiplayerRoom.code, username })
+          });
+        } catch (error) {
+          console.error('Heartbeat failed:', error);
+        }
+      }, 5000);
+
+      // Poll for room updates every 500ms for better sync
       pollInterval = setInterval(async () => {
         try {
           const response = await fetch(`/api/multiplayer/room/${multiplayerRoom.code}`);
           if (response.ok) {
             const data = await response.json();
             if (data.status === 'success') {
+              // Force update if player list changed
+              const currentPlayerCount = playersInRoom.length;
+              const newPlayerCount = data.room.players.length;
+
+              if (currentPlayerCount !== newPlayerCount) {
+                console.log(`Player count changed: ${currentPlayerCount} -> ${newPlayerCount}`);
+              }
+
               setPlayersInRoom(data.room.players);
+
+              // Check for round progression
+              const currentRoomRound = multiplayerRoom?.currentRound || 1;
+              const newRoomRound = data.room.currentRound || 1;
+
               setMultiplayerRoom(data.room);
+
+              // Check if game state changed (initial start)
+              if (data.room.gameStarted && currentScreen === 'multiplayer-lobby' && !gameStarted) {
+                console.log('Game starting - switching to game screen');
+                setGameStarted(true);
+                setCurrentScreen('game');
+                startNewRound();
+              }
+
+              // Check for round progression (during game)
+              if (data.room.gameStarted && currentScreen === 'result' && newRoomRound > currentRoomRound) {
+                console.log(`Round progressed: ${currentRoomRound} -> ${newRoomRound}`);
+                setMultiplayerRound(newRoomRound);
+                setWaitingForOthers(false);
+                setAllPlayersSubmitted(false);
+
+                if (data.room.gameEnded) {
+                  setCurrentScreen('multiplayer-final');
+                } else {
+                  startNewRound();
+                }
+              }
             }
           }
         } catch (error) {
           console.error('Failed to poll room updates:', error);
+          setIsConnected(false);
         }
-      }, 2000);
+      }, 500); // Much faster polling - 500ms instead of 2000ms
     }
 
     return () => {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
       setIsConnected(false);
     };
-  }, [gameMode, multiplayerRoom?.code]);
+  }, [multiplayerRoom?.code, playersInRoom.length, currentScreen]);
 
   // Real-time multiplayer guess submission
   const submitMultiplayerGuess = async (guess: any, score: number) => {
-    // In real implementation, send to WebSocket server
-    const guessData = {
-      username,
-      guess,
-      score,
-      timestamp: Date.now(),
-      roomCode: multiplayerRoom?.code
-    };
+    if (!multiplayerRoom?.code) return;
 
-    // Add to multiplayer guesses immediately (real players will be synced via polling)
-    setMultiplayerGuesses(prev => [...prev, guessData]);
+    try {
+      setWaitingForOthers(true);
+
+      const response = await fetch('/api/multiplayer/submit-guess', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: multiplayerRoom.code,
+          guess,
+          score,
+          username
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.allSubmitted) {
+          // All players submitted, show results
+          setAllPlayersSubmitted(true);
+          setMultiplayerGuesses(data.room.roundGuesses);
+          setMultiplayerRoom(data.room);
+          setWaitingForOthers(false);
+
+          // Set a flag to indicate results are being shown
+          // The polling will detect round progression and advance all players
+        }
+      }
+    } catch (error) {
+      console.error('Failed to submit multiplayer guess:', error);
+      setWaitingForOthers(false);
+    }
   };
 
   // Fetch live Reddit data for enhanced experience
@@ -825,7 +1016,7 @@ export const App = () => {
     }
   };
 
-  // Fetch REAL community stats
+  // Fetch real community stats
   const fetchCommunityStats = async () => {
     try {
       const response = await fetch('/api/community-stats');
@@ -903,23 +1094,52 @@ export const App = () => {
       return;
     }
 
-    const randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+    let randomPost;
+
+    let multiplayerOptions: string[] = [];
+
+    // In multiplayer, get the post from server to ensure all players see the same question
+    if (multiplayerRoom) {
+      try {
+        const response = await fetch(`/api/multiplayer/current-post/${multiplayerRoom.code}`);
+        if (response.ok) {
+          const data = await response.json();
+          randomPost = data.post;
+          multiplayerOptions = data.options || [];
+        } else {
+          // Fallback to random post if server fails
+          randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+        }
+      } catch (error) {
+        console.error('Failed to fetch multiplayer post:', error);
+        // Fallback to random post
+        randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+      }
+    } else {
+      // Solo/daily mode - use random post
+      randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+    }
+
     setCurrentPost(randomPost);
     setCurrentScreen('game');
     setGuessedSubreddit('');
     setGuessedYear(2020);
-    
+
     // Generate multiple choice options for subreddit
-    setSubredditOptions(generateMultipleChoice(randomPost.subreddit));
-
-    // Fetch real Reddit data for this subreddit
-    fetchRedditData(randomPost.subreddit);
-
-    // Start timer for competitive modes
-    if (gameMode === 'multiplayer' || gameMode === 'daily') {
-      setGameTimer(60);
-      setTimerActive(true);
+    if (randomPost?.subreddit) {
+      // In multiplayer, use server-provided options; otherwise generate locally
+      if (multiplayerRoom && multiplayerOptions.length > 0) {
+        setSubredditOptions(multiplayerOptions);
+      } else {
+        setSubredditOptions(generateMultipleChoice(randomPost.subreddit));
+      }
+      // Fetch real Reddit data for this subreddit
+      fetchRedditData(randomPost.subreddit);
     }
+
+    // Start timer for all game modes to add pressure
+    setGameTimer(60);
+    setTimerActive(true);
 
     // Fetch live Reddit data for the current post
     if (randomPost?.subreddit) {
@@ -931,6 +1151,11 @@ export const App = () => {
     setCurrentPost(null);
     setCurrentScreen('menu');
     setTimerActive(false);
+    // Reset multiplayer state when going to menu
+    setGameMode('solo');
+    setMultiplayerRoom(null);
+    setGameStarted(false);
+    setWaitingForOthers(false);
   };
 
   const showLeaderboardScreen = () => {
@@ -944,15 +1169,15 @@ export const App = () => {
   const calculateScore = (guess: any, actual: any) => {
     let roundScore = 0;
 
-    // Subreddit scoring (exact match = 1000 points)
+    // Subreddit scoring (exact match = 100 points)
     if (guess.subreddit.toLowerCase() === actual.subreddit.toLowerCase()) {
-      roundScore += 1000;
+      roundScore += 100;
     }
 
-    // Year scoring (only award points if within 5 years, max 1000)
+    // Year scoring (only award points if within 5 years, max 100)
     const yearDiff = Math.abs(guess.year - actual.year);
     if (yearDiff <= 5) {
-      const yearScore = Math.max(0, 1000 - (yearDiff * 200));
+      const yearScore = Math.max(0, 100 - (yearDiff * 20));
       roundScore += yearScore;
     }
 
@@ -967,19 +1192,74 @@ export const App = () => {
 
     const isCorrectSubreddit = guess.subreddit.toLowerCase() === currentPost.subreddit.toLowerCase();
     const isCorrectYear = guess.year === currentPost.year;
+    const isPerfectGuess = isCorrectSubreddit && isCorrectYear;
 
-    setScore(score + roundScore);
+    // STREAK SYSTEM - The dopamine mechanic!
+    if (isPerfectGuess) {
+      // CORRECT! Increase streak and total
+      const newStreak = currentStreak + 1;
+      const newTotal = totalCorrect + 1;
+
+      setCurrentStreak(newStreak);
+      setTotalCorrect(newTotal);
+      setLastGuessCorrect(true);
+      setLastGuessPartial(false);
+      setShowStreakAnimation(true);
+
+      // Update best streak
+      if (newStreak > bestStreak) {
+        setBestStreak(newStreak);
+      }
+
+      // Save progress to server
+      setTimeout(() => savePlayerData(), 100); // Small delay to ensure state is updated
+
+      // Add score for perfect guess
+      setScore(score + roundScore);
+
+      // Show streak animation
+      setTimeout(() => setShowStreakAnimation(false), 2000);
+    } else {
+      // NOT PERFECT! Reset current streak but keep total correct
+      setCurrentStreak(0);
+
+      // Check if it's partial (some points) or completely wrong (0 points)
+      if (roundScore > 0) {
+        setLastGuessCorrect(null); // Neither true nor false - it's partial
+        setLastGuessPartial(true);
+      } else {
+        setLastGuessCorrect(false); // Completely wrong
+        setLastGuessPartial(false);
+      }
+
+      // In solo mode: reset total score but still show round score
+      // In daily/multiplayer: accumulate all points
+      if (gameMode === 'solo') {
+        setScore(0); // Reset total score on non-perfect guess (streak system)
+      } else {
+        setScore(score + roundScore); // Keep accumulating points for competitive modes
+      }
+
+      // Save updated data to server
+      setTimeout(() => savePlayerData(), 100);
+    }
+
     setRound(round + 1);
     setShowResult(true);
     setLastScore(roundScore);
+
+    // Handle multiplayer guess submission BEFORE showing result screen
+    if (gameMode === 'multiplayer' && multiplayerRoom) {
+      submitMultiplayerGuess(guess, roundScore);
+    }
+
     setCurrentScreen('result');
 
     // Check for achievements
-    checkAchievements(roundScore, isCorrectSubreddit, isCorrectYear);
+    checkAchievements();
 
     // Report game completion for real stats
-    const isPerfect = isCorrectSubreddit && isCorrectYear;
-    reportGameCompletion(roundScore, isPerfect);
+    reportGameCompletion(roundScore, isPerfectGuess);
 
     // Add to community feed
     const guessResult = {
@@ -991,11 +1271,6 @@ export const App = () => {
       timestamp: new Date().toLocaleString()
     };
     setRecentGuesses(prev => [guessResult, ...prev].slice(0, 20));
-
-    // Handle multiplayer guess submission
-    if (gameMode === 'multiplayer' && multiplayerRoom) {
-      submitMultiplayerGuess(guess, roundScore);
-    }
 
     // Update leaderboard via real API
     if (gameMode === 'daily') {
@@ -1054,6 +1329,8 @@ export const App = () => {
         setRoomCode(data.room.code);
         setPlayersInRoom(data.room.players);
         setIsRoomHost(true);
+        setGameStarted(false);
+        setGameMode('multiplayer'); // Set gameMode when creating room
         setCurrentScreen('multiplayer-lobby');
       }
     } catch (error) {
@@ -1063,6 +1340,8 @@ export const App = () => {
 
   const joinMultiplayerRoom = async (code: string) => {
     try {
+      console.log(`Attempting to join room: ${code.toUpperCase()}`);
+
       const response = await fetch('/api/multiplayer/join-room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1070,52 +1349,71 @@ export const App = () => {
       });
       const data = await response.json();
 
+      console.log('Join room response:', data);
+
       if (data.status === 'success') {
         setMultiplayerRoom(data.room);
         setRoomCode(data.room.code);
         setPlayersInRoom(data.room.players);
         setIsRoomHost(data.room.host === username);
+        setGameStarted(false);
+        setGameMode('multiplayer'); // Set gameMode when joining room
         setCurrentScreen('multiplayer-lobby');
+
+        console.log(`Successfully joined room ${code}. Players: ${data.room.players.length}`);
       } else {
+        console.error('Join room failed:', data.message);
         alert(data.message || 'Failed to join room');
       }
     } catch (error) {
       console.error('Failed to join room:', error);
-      alert('Failed to join room');
+      alert('Network error: Failed to join room');
     }
   };
 
-  const startMultiplayerGame = () => {
-    if (isRoomHost && playersInRoom.length >= 2) {
-      setGameStartCountdown(3);
-      const countdown = setInterval(() => {
-        setGameStartCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdown);
-            setGameMode('multiplayer');
-            startNewRound();
-            return 0;
-          }
-          return prev - 1;
+  const startMultiplayerGame = async () => {
+    if (isRoomHost && playersInRoom.length >= 1) {
+      try {
+        // Signal server to start the game
+        const response = await fetch('/api/multiplayer/start-game', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomCode: multiplayerRoom?.code, username })
         });
-      }, 1000);
+
+        if (response.ok) {
+          setGameStartCountdown(3);
+          const countdown = setInterval(() => {
+            setGameStartCountdown(prev => {
+              if (prev <= 1) {
+                clearInterval(countdown);
+                setGameMode('multiplayer');
+                // Don't call startNewRound here - let the polling detection handle it
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Failed to start multiplayer game:', error);
+      }
     }
   };
 
-  const checkAchievements = (roundScore: number, isCorrectSubreddit: boolean, isCorrectYear: boolean) => {
+  const checkAchievements = () => {
     const newAchievements: string[] = [];
 
-    if (isCorrectSubreddit && isCorrectYear) {
-      setStreak(prev => prev + 1);
-      if (streak + 1 === 5) newAchievements.push("🔥 On Fire! 5 perfect guesses in a row!");
-      if (streak + 1 === 10) newAchievements.push("🚀 Unstoppable! 10 perfect streak!");
-    } else {
-      setStreak(0);
-    }
+    // Streak-based achievements
+    if (currentStreak === 5) newAchievements.push("🔥 On Fire! 5 in a row!");
+    if (currentStreak === 10) newAchievements.push("🚀 Unstoppable! 10 streak!");
+    if (currentStreak === 25) newAchievements.push("🏆 LEGENDARY! 25 streak!");
+    if (currentStreak === 50) newAchievements.push("👑 REDDIT GOD! 50 streak!");
 
-    if (roundScore >= 2000) newAchievements.push("💎 Perfect Score! You're a Reddit legend!");
-    if (round === 1 && roundScore >= 1500) newAchievements.push("🎯 First Try Hero!");
-    if (score + roundScore >= 10000) newAchievements.push("🏆 Score Master! 10,000+ points!");
+    // Total correct achievements
+    if (totalCorrect === 10) newAchievements.push("🎯 Getting Good! 10 total correct!");
+    if (totalCorrect === 50) newAchievements.push("� Reddit  Scholar! 50 total correct!");
+    if (totalCorrect === 100) newAchievements.push("🧠 Reddit Historian! 100 total correct!");
 
     if (newAchievements.length > 0) {
       setAchievements((prev: string[]) => [...prev, ...newAchievements]);
@@ -1130,20 +1428,32 @@ export const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-900 via-gray-900 to-red-900 text-white p-4">
         <div className="flex flex-col justify-center items-center min-h-screen">
           <div className="text-center mb-8">
-            <div className="mb-6">
-              <span className="text-6xl sm:text-8xl">🔍</span>
+            <div className="mb-4">
+              <span className="text-4xl sm:text-6xl">🔍</span>
             </div>
-            <h1 className="text-4xl sm:text-7xl font-bold mb-4 text-orange-400 tracking-tight">
+            <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-orange-400 tracking-tight">
               LEZ<span className="text-white">GUESS</span>
             </h1>
-            <p className="text-lg sm:text-2xl mb-2 text-gray-300">The Ultimate Reddit History Challenge</p>
-            <p className="text-sm sm:text-lg mb-8 text-gray-400">Join the community and compete with redditors worldwide!</p>
+            <p className="text-base sm:text-xl mb-2 text-gray-300">The Ultimate Reddit History Challenge</p>
+            <p className="text-sm sm:text-base mb-4 text-gray-400">Join the community and compete with redditors worldwide!</p>
+
+            {/* Game explanation for demo */}
+            <div className="bg-gray-800 rounded-lg p-4 mb-4 max-w-2xl mx-auto">
+              <h3 className="text-lg font-bold text-orange-400 mb-3">🎮 How to Play</h3>
+              <div className="text-left space-y-2 text-sm text-gray-300">
+                <p>• <strong>Guess legendary Reddit posts</strong> from 2005-2024</p>
+                <p>• <strong>Identify the subreddit and year</strong> of iconic moments</p>
+                <p>• <strong>Compete in real-time multiplayer</strong> or daily challenges</p>
+                <p>• <strong>Build streaks</strong> and climb the leaderboards</p>
+                <p>• <strong>50 curated posts</strong> including EA's downvoted comment, Boston bomber, Keanu memes, and more!</p>
+              </div>
+            </div>
           </div>
 
-          <div className="w-full max-w-md bg-gray-800 rounded-lg p-6 shadow-lg">
-            <h2 className="text-2xl font-bold mb-6 text-center text-orange-400">Choose Your Username</h2>
+          <div className="w-full max-w-md bg-gray-800 rounded-lg p-4 shadow-lg">
+            <h2 className="text-2xl font-bold mb-4 text-center text-orange-400">Choose Your Username</h2>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium mb-2 text-gray-300">
                 Username (3-20 characters)
               </label>
@@ -1187,14 +1497,29 @@ export const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-900 via-gray-900 to-red-900 text-white p-4">
         <div className="flex flex-col justify-center items-center min-h-screen">
           <div className="text-center mb-8">
-            <div className="mb-6">
-              <span className="text-6xl sm:text-8xl">🔍</span>
+            <div className="mb-4">
+              <span className="text-4xl sm:text-6xl">🔍</span>
             </div>
-            <h1 className="text-4xl sm:text-7xl font-bold mb-4 text-orange-400 tracking-tight">
+            <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-orange-400 tracking-tight">
               LEZ<span className="text-white">GUESS</span>
             </h1>
-            <p className="text-lg sm:text-2xl mb-2 text-gray-300">Welcome back, {username}!</p>
-            <p className="text-sm sm:text-lg mb-8 text-gray-400">Choose your game mode</p>
+            <p className="text-base sm:text-xl mb-2 text-gray-300">Welcome back, {username}!</p>
+
+            {/* Player Stats Display */}
+            <div className="flex justify-center gap-4 sm:gap-6 mb-4">
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold text-blue-400">{totalCorrect}</div>
+                <div className="text-xs text-gray-400">Total Correct</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold text-purple-400">{bestStreak}</div>
+                <div className="text-xs text-gray-400">Best Streak</div>
+              </div>
+            </div>
+
+            <p className="text-sm sm:text-base mb-4 text-gray-400">
+              {bestStreak > 0 ? `Beat your streak of ${bestStreak}!` : 'Start your winning streak!'}
+            </p>
           </div>
 
           <div className="grid gap-4 w-full max-w-md">
@@ -1203,7 +1528,7 @@ export const App = () => {
                 setGameMode('solo');
                 startNewRound();
               }}
-              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-lg text-lg sm:text-xl transition-all transform hover:scale-105"
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg text-base transition-colors"
             >
               🎯 Solo Challenge
             </button>
@@ -1234,14 +1559,14 @@ export const App = () => {
                   startNewRound(); // Fallback to allow play
                 }
               }}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg text-lg sm:text-xl transition-all transform hover:scale-105"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-base transition-colors"
             >
               📅 Daily Challenge
             </button>
 
             <button
               onClick={createMultiplayerRoom}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-lg sm:text-xl transition-all transform hover:scale-105"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-base transition-colors"
             >
               👥 Create Multiplayer Room
             </button>
@@ -1277,6 +1602,13 @@ export const App = () => {
             >
               🌍 Live Community Feed
             </button>
+
+            <button
+              onClick={() => setCurrentScreen('tutorial')}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all"
+            >
+              📚 How to Play
+            </button>
           </div>
 
           <div className="mt-8 text-center text-gray-400">
@@ -1297,18 +1629,41 @@ export const App = () => {
               <h1 className="text-3xl sm:text-4xl font-bold text-blue-500">👥 Multiplayer Lobby</h1>
               <p className="text-gray-400">Room Code: <span className="text-blue-400 font-mono text-lg">{multiplayerRoom?.code}</span></p>
               <div className="flex items-center gap-2 mt-2">
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></span>
                 <span className="text-sm text-gray-400">
-                  {isConnected ? 'Connected to live server' : 'Connecting...'}
+                  {isConnected ? `Live sync • ${playersInRoom.length} players` : 'Reconnecting...'}
                 </span>
               </div>
             </div>
-            <button
-              onClick={goToMenu}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              Leave Room
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  // Force refresh room state
+                  try {
+                    const response = await fetch(`/api/multiplayer/room/${multiplayerRoom?.code}`);
+                    if (response.ok) {
+                      const data = await response.json();
+                      if (data.status === 'success') {
+                        setPlayersInRoom(data.room.players);
+                        setMultiplayerRoom(data.room);
+                        console.log('Room state refreshed:', data.room);
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Failed to refresh room:', error);
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+              >
+                🔄 Refresh
+              </button>
+              <button
+                onClick={goToMenu}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                Leave Room
+              </button>
+            </div>
           </div>
 
           {gameStartCountdown > 0 && (
@@ -1345,10 +1700,10 @@ export const App = () => {
                 ))}
               </div>
 
-              {playersInRoom.length < 2 && (
+              {playersInRoom.length < 1 && (
                 <div className="mt-4 p-4 bg-yellow-900 bg-opacity-50 rounded-lg">
                   <p className="text-yellow-400 text-sm">
-                    ⏳ Waiting for more players... Share the room code: <span className="font-mono font-bold">{multiplayerRoom?.code}</span>
+                    ⏳ Waiting for players... Share the room code: <span className="font-mono font-bold">{multiplayerRoom?.code}</span>
                   </p>
                 </div>
               )}
@@ -1356,6 +1711,17 @@ export const App = () => {
 
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-4 text-green-400">Game Rules</h2>
+
+              {/* Debug info for troubleshooting */}
+              <div className="mb-4 p-2 bg-gray-700 rounded text-xs">
+                <p className="text-yellow-400">Debug Info:</p>
+                <p>Room: {multiplayerRoom?.code}</p>
+                <p>Players: {playersInRoom.length}</p>
+                <p>Host: {multiplayerRoom?.host}</p>
+                <p>You: {username}</p>
+                <p>Connected: {isConnected ? 'Yes' : 'No'}</p>
+                <p>Last Update: {new Date().toLocaleTimeString()}</p>
+              </div>
               <div className="space-y-3 text-gray-300">
                 <div className="flex items-start gap-3">
                   <span className="text-orange-400">🎯</span>
@@ -1379,10 +1745,10 @@ export const App = () => {
                 <div className="mt-6">
                   <button
                     onClick={startMultiplayerGame}
-                    disabled={playersInRoom.length < 2}
+                    disabled={playersInRoom.length < 1}
                     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors"
                   >
-                    {playersInRoom.length < 2 ? 'Need 2+ Players to Start' : 'Start Game!'}
+                    {playersInRoom.length < 1 ? 'Need 1+ Players to Start' : 'Start Game!'}
                   </button>
                   <p className="text-xs text-gray-400 mt-2 text-center">
                     You are the host - only you can start the game
@@ -1407,54 +1773,210 @@ export const App = () => {
   if (currentScreen === 'result' && currentPost) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-4">
-        <div className="max-w-4xl mx-auto py-8">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-orange-500 text-center">Round {round} Results</h2>
+        <div className="max-w-4xl mx-auto py-4">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-orange-500 text-center">Round {round} Results</h2>
 
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
-            <p className="text-base sm:text-lg mb-4 text-gray-300">"{currentPost.content}"</p>
+          <div className="bg-gray-800 rounded-lg p-4 mb-4">
+            <p className="text-base sm:text-lg mb-3 text-gray-300">"{currentPost.content}"</p>
             <p className="text-sm text-gray-400">r/{currentPost.subreddit} • {currentPost.year}</p>
             <p className="text-sm text-gray-400">{currentPost.context}</p>
           </div>
 
           {gameMode === 'multiplayer' && multiplayerGuesses.length > 0 && (
-            <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <div className="bg-gray-800 rounded-lg p-4 mb-4">
               <h3 className="text-xl font-bold mb-4 text-blue-400">🏆 Round Results</h3>
               <div className="space-y-3">
                 {multiplayerGuesses
                   .sort((a, b) => b.score - a.score)
                   .map((guess, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                      <div>
-                        <span className="font-bold text-white">
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'} {guess.username}
-                        </span>
-                        <p className="text-sm text-gray-400">
-                          Guessed: r/{guess.guess.subreddit} • {guess.guess.year}
-                        </p>
+                    <div key={index} className="p-4 bg-gray-700 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}
+                          </span>
+                          <span className="font-bold text-white text-lg">{guess.username}</span>
+                          {guess.username === username && (
+                            <span className="text-orange-400 text-sm">(You)</span>
+                          )}
+                        </div>
+                        <span className="text-xl font-bold text-green-400">+{guess.score} pts</span>
                       </div>
-                      <span className="text-lg font-bold text-green-400">+{guess.score}</span>
+
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-400">Subreddit:</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white">r/{guess.guess.subreddit}</span>
+                            {guess.guess.subreddit.toLowerCase() === currentPost?.subreddit.toLowerCase() ? (
+                              <span className="text-green-400">✓</span>
+                            ) : (
+                              <span className="text-red-400">✗</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Year:</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white">{guess.guess.year}</span>
+                            {guess.guess.year === currentPost?.year ? (
+                              <span className="text-green-400">✓</span>
+                            ) : (
+                              <span className="text-red-400">✗ ({currentPost?.year})</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {guess.score === 200 && (
+                        <div className="mt-2 text-center">
+                          <span className="bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
+                            🎯 PERFECT SCORE!
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ))}
+              </div>
+
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-400">
+                  Correct answer: <span className="text-orange-400 font-bold">r/{currentPost?.subreddit}</span> • <span className="text-orange-400 font-bold">{currentPost?.year}</span>
+                </p>
               </div>
             </div>
           )}
 
           <div className="text-center mb-8">
-            <p className="text-2xl sm:text-3xl font-bold text-green-400 mb-2">+{lastScore} points!</p>
-            <p className="text-lg sm:text-xl text-gray-300">Your Total Score: {score}</p>
-            {streak > 0 && (
-              <p className="text-base sm:text-lg text-orange-400 mt-2">🔥 {streak} perfect streak!</p>
+            {lastGuessCorrect === true ? (
+              <div className="mb-4">
+                <div className="text-5xl mb-3">✅</div>
+                <p className="text-3xl sm:text-4xl font-bold text-green-400 mb-2">PERFECT!</p>
+                <p className="text-xl sm:text-2xl text-green-300 mb-2">+{lastScore} points! 🔥 Streak: {currentStreak}</p>
+
+                {/* Score breakdown */}
+                <div className="bg-gray-700 rounded-lg p-4 mt-4 text-left max-w-md mx-auto">
+                  <p className="text-sm font-bold text-gray-300 mb-2">Perfect Score Breakdown:</p>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Subreddit ({guessedSubreddit}):</span>
+                      <span className="text-green-400">+100</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Year ({guessedYear}):</span>
+                      <span className="text-green-400">+100</span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-1 flex justify-between font-bold">
+                      <span>Total:</span>
+                      <span className="text-green-400">+200</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-lg text-blue-300 mt-3">🎯 Total Correct: {totalCorrect}</p>
+                {currentStreak > bestStreak - 1 && currentStreak > 1 && (
+                  <p className="text-lg text-purple-400 mt-2">👑 NEW BEST STREAK!</p>
+                )}
+              </div>
+            ) : lastGuessPartial ? (
+              <div className="mb-4">
+                <div className="text-5xl mb-3">🔶</div>
+                <p className="text-3xl sm:text-4xl font-bold text-orange-400 mb-2">PARTIAL!</p>
+                <p className="text-xl text-orange-300 mb-2">+{lastScore} points, but streak reset 💔</p>
+
+                {/* Score breakdown */}
+                <div className="bg-gray-700 rounded-lg p-4 mt-4 text-left max-w-md mx-auto">
+                  <p className="text-sm font-bold text-gray-300 mb-2">Score Breakdown:</p>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Subreddit ({guessedSubreddit}):</span>
+                      <span className={guessedSubreddit.toLowerCase() === currentPost?.subreddit.toLowerCase() ? 'text-green-400' : 'text-red-400'}>
+                        {guessedSubreddit.toLowerCase() === currentPost?.subreddit.toLowerCase() ? '+100' : '+0'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Year ({guessedYear}):</span>
+                      <span className={guessedYear === currentPost?.year ? 'text-green-400' : 'text-orange-400'}>
+                        {currentPost ? `+${Math.max(0, 100 - (Math.abs(guessedYear - currentPost.year) * 20))}` : '+0'}
+                      </span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-1 flex justify-between font-bold">
+                      <span>Total:</span>
+                      <span className="text-orange-400">+{lastScore}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-lg text-gray-400 mt-3">{gameMode === 'solo' ? 'Score Reset to 0' : `Total Score: ${score}`}</p>
+                <p className="text-lg text-blue-300 mt-2">🎯 Total Correct: {totalCorrect}</p>
+              </div>
+            ) : lastGuessCorrect === false ? (
+              <div className="mb-4">
+                <div className="text-5xl mb-3">❌</div>
+                <p className="text-3xl sm:text-4xl font-bold text-red-400 mb-2">WRONG!</p>
+                <p className="text-xl text-red-300 mb-2">Streak Reset 💔</p>
+
+                {/* Score breakdown */}
+                <div className="bg-gray-700 rounded-lg p-4 mt-4 text-left max-w-md mx-auto">
+                  <p className="text-sm font-bold text-gray-300 mb-2">Score Breakdown:</p>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Subreddit ({guessedSubreddit}):</span>
+                      <span className="text-red-400">+0</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Year ({guessedYear}):</span>
+                      <span className="text-red-400">+0</span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-1 flex justify-between font-bold">
+                      <span>Total:</span>
+                      <span className="text-red-400">+0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-lg text-gray-400 mt-3">{gameMode === 'solo' ? 'Score Reset to 0' : `Total Score: ${score}`}</p>
+                <p className="text-lg text-blue-300 mt-2">🎯 Total Correct: {totalCorrect}</p>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <p className="text-2xl sm:text-3xl font-bold text-green-400 mb-2">+{lastScore} points!</p>
+                <p className="text-lg sm:text-xl text-gray-300">Your Total Score: {score}</p>
+              </div>
             )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {gameMode !== 'daily' && (
-              <button
-                onClick={startNewRound}
-                className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-              >
-                Next Round
-              </button>
+            {gameMode === 'solo' && (
+              <>
+                {lastGuessCorrect === true ? (
+                  <button
+                    onClick={startNewRound}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition-colors text-xl"
+                  >
+                    🔥 Keep the Streak Going!
+                  </button>
+                ) : lastGuessCorrect === false ? (
+                  <button
+                    onClick={() => {
+                      // Reset for new attempt
+                      setCurrentStreak(0);
+                      setScore(0);
+                      startNewRound();
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-lg transition-colors text-xl"
+                  >
+                    💪 Try Again! Beat {bestStreak}!
+                  </button>
+                ) : (
+                  <button
+                    onClick={startNewRound}
+                    className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                  >
+                    Next Round
+                  </button>
+                )}
+              </>
             )}
             {gameMode === 'daily' && (
               <button
@@ -1464,11 +1986,52 @@ export const App = () => {
                 🏆 View Leaderboard
               </button>
             )}
+            {gameMode === 'multiplayer' && (
+              <div className="text-center">
+                {waitingForOthers ? (
+                  <div>
+                    <div className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg mb-4">
+                      ⏳ Waiting for Other Players...
+                    </div>
+
+                    {/* Show submission status */}
+                    <div className="bg-gray-800 rounded-lg p-4 mb-4">
+                      <h4 className="text-lg font-bold text-blue-400 mb-3">Submission Status</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {playersInRoom.map((player, index) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded">
+                            <span className="text-white">{player.username}</span>
+                            {player.hasSubmitted ? (
+                              <span className="text-green-400">✅ Submitted</span>
+                            ) : (
+                              <span className="text-yellow-400">⏳ Thinking...</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-400">
+                      Results will be shown when everyone submits
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg mb-2">
+                      ✅ Round Complete!
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      Advancing to next round automatically...
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             <button
               onClick={() => {
                 setRound(0);
                 setScore(0);
-                setStreak(0);
+                setCurrentStreak(0);
                 setMultiplayerGuesses([]);
                 goToMenu();
               }}
@@ -1488,27 +2051,51 @@ export const App = () => {
       <div className="min-h-screen bg-gray-900 text-white p-4 relative">
         {/* Achievement Notification */}
         {showAchievement && (
-          <div className="fixed top-4 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-4 py-3 rounded-lg shadow-lg z-50 animate-bounce max-w-xs">
+          <div className="fixed top-4 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-4 py-3 rounded-lg shadow-lg z-50 max-w-xs">
             <p className="font-bold text-sm sm:text-lg">{showAchievement}</p>
           </div>
         )}
 
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+          {/* Header with Streak System */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-orange-500">Reddit Guesser</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-orange-500">Reddit Guesser</h1>
               {gameMode === 'multiplayer' && (
-                <p className="text-sm text-blue-400">🎮 Multiplayer • Room: {multiplayerRoom?.code}</p>
+                <div>
+                  <p className="text-sm text-blue-400">🎮 Multiplayer • Room: {multiplayerRoom?.code}</p>
+                  <p className="text-sm text-purple-400">Round {multiplayerRound}/5</p>
+                </div>
               )}
             </div>
-            <div className="text-right">
-              <p className="text-lg sm:text-xl text-gray-300">Score: {score}</p>
-              <p className="text-sm text-gray-400">Playing as: {username}</p>
+
+            {/* STREAK DISPLAY - The dopamine center! */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="text-center">
+                <div className={`text-2xl sm:text-3xl font-bold ${currentStreak > 0 ? 'text-green-400' : 'text-gray-400'}`}>
+                  🔥 {currentStreak}
+                </div>
+                <p className="text-xs text-gray-400">Current Streak</p>
+              </div>
+
+              <div className="text-center">
+                <div className="text-lg sm:text-xl font-bold text-blue-400">
+                  🎯 {totalCorrect}
+                </div>
+                <p className="text-xs text-gray-400">Total Correct</p>
+              </div>
+
+              <div className="text-center">
+                <div className="text-lg sm:text-xl font-bold text-purple-400">
+                  👑 {bestStreak}
+                </div>
+                <p className="text-xs text-gray-400">Best Streak</p>
+              </div>
+
               {timerActive && (
-                <div className="flex items-center gap-2 justify-end mt-1">
+                <div className="flex items-center gap-2">
                   <span className="text-2xl">⏱️</span>
-                  <span className={`text-lg font-bold ${gameTimer <= 10 ? 'text-red-400 animate-pulse' : 'text-orange-400'}`}>
+                  <span className={`text-lg font-bold ${gameTimer <= 10 ? 'text-red-400' : 'text-orange-400'}`}>
                     {gameTimer}s
                   </span>
                 </div>
@@ -1516,9 +2103,11 @@ export const App = () => {
             </div>
           </div>
 
+          {/* Removed distracting streak animation overlay */}
+
           {/* Multiplayer Players Status */}
           {gameMode === 'multiplayer' && (
-            <div className="bg-gray-800 rounded-lg p-4 mb-6">
+            <div className="bg-gray-800 rounded-lg p-4 mb-4">
               <h3 className="text-lg font-bold text-blue-400 mb-3">Live Players</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {playersInRoom.map((player, index) => (
@@ -1532,12 +2121,12 @@ export const App = () => {
           )}
 
           {/* Mystery Post */}
-          <div className="bg-gray-800 rounded-lg p-6 mb-8 border-l-4 border-orange-500">
+          <div className="bg-gray-800 rounded-lg p-6 mb-6 border-l-4 border-orange-500">
             <div className="flex items-start gap-4">
               <div className="flex flex-col items-center text-gray-400">
                 <button className="hover:text-orange-500 transition-colors">▲</button>
                 <span className="font-bold text-lg py-1">
-                  {currentPost.upvotes > 0 ? '+' : ''}{currentPost.upvotes.toLocaleString()}
+                  {currentPost.upvotes > 0 ? '+' : ''}{(currentPost.upvotes || 0).toLocaleString()}
                 </span>
                 <button className="hover:text-blue-500 transition-colors">▼</button>
               </div>
@@ -1547,14 +2136,35 @@ export const App = () => {
                   <span className="text-gray-500">•</span>
                   <span className="text-gray-400">Posted by u/[REDACTED]</span>
                   <span className="text-gray-500">•</span>
-                  <span className="text-gray-400">{currentPost.year}?</span>
+                  <span className="text-gray-400">
+                    {currentPost.year >= 2020 ? '🆕 Recent' :
+                      currentPost.year >= 2015 ? '📱 Smartphone Era' :
+                        currentPost.year >= 2010 ? '🌐 Social Media Boom' :
+                          '🏛️ Early Internet'}
+                  </span>
                   {isLoadingRedditData && (
-                    <span className="text-xs text-blue-400 animate-pulse">Loading live data...</span>
+                    <span className="text-xs text-blue-400">Loading live data...</span>
                   )}
                 </div>
-                <p className="text-xl font-medium mb-4 text-white">"{currentPost.content}"</p>
+                <p className="text-lg font-medium mb-4 text-white leading-relaxed">"{currentPost.content}"</p>
+                <div className="bg-gray-700 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-gray-300 italic">Context: {currentPost.context || 'No context available'}</p>
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-gray-400">Difficulty: <span className={`font-bold ${(currentPost.difficulty || 'medium') === 'easy' ? 'text-green-400' :
+                      (currentPost.difficulty || 'medium') === 'medium' ? 'text-yellow-400' :
+                        (currentPost.difficulty || 'medium') === 'hard' ? 'text-orange-400' :
+                          'text-red-400'
+                      }`}>{(currentPost.difficulty || 'medium').toUpperCase()}</span></p>
+                    <p className="text-xs text-blue-400">
+                      Era: {currentPost.year >= 2020 ? '🆕 Recent' :
+                        currentPost.year >= 2015 ? '📱 Smartphone Era' :
+                          currentPost.year >= 2010 ? '🌐 Social Media Boom' :
+                            '🏛️ Early Internet'}
+                    </p>
+                  </div>
+                </div>
                 <div className="flex gap-4 text-sm text-gray-400">
-                  <span>💬 {currentPost.upvotes > 0 ? Math.floor(currentPost.upvotes * 0.1) : Math.floor(Math.abs(currentPost.upvotes) * 0.05)} comments</span>
+                  <span>💬 {(currentPost.upvotes || 0) > 0 ? Math.floor((currentPost.upvotes || 0) * 0.1) : Math.floor(Math.abs(currentPost.upvotes || 0) * 0.05)} comments</span>
                   <span>🔗 Share</span>
                   <span>💾 Save</span>
                   <span>🏆 Award</span>
@@ -1564,7 +2174,7 @@ export const App = () => {
           </div>
 
           {/* Guess Form */}
-          <div className="grid gap-6 mb-8">
+          <div className="grid gap-4 mb-6">
             <div>
               <label className="block text-base sm:text-lg mb-4 text-gray-300">Guess the subreddit:</label>
               {subredditOptions.length > 0 ? (
@@ -1573,11 +2183,10 @@ export const App = () => {
                     <button
                       key={index}
                       onClick={() => setGuessedSubreddit(option)}
-                      className={`p-4 rounded-lg text-lg font-medium transition-all transform hover:scale-105 ${
-                        guessedSubreddit === option
-                          ? 'bg-orange-600 text-white border-2 border-orange-400'
-                          : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:bg-gray-600 hover:border-gray-500'
-                      }`}
+                      className={`p-3 rounded-lg text-base font-medium transition-colors ${guessedSubreddit === option
+                        ? 'bg-orange-600 text-white border-2 border-orange-400'
+                        : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:bg-gray-600 hover:border-gray-500'
+                        }`}
                     >
                       r/{option}
                     </button>
@@ -1607,21 +2216,54 @@ export const App = () => {
                   +
                 </button>
               </div>
+              <div className="mt-2 text-center">
+                <input
+                  type="range"
+                  min="2005"
+                  max="2024"
+                  value={guessedYear}
+                  onChange={(e) => setGuessedYear(parseInt(e.target.value, 10))}
+                  className="w-full max-w-md mx-auto slider"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                  <span>2005</span>
+                  <span>2010</span>
+                  <span>2015</span>
+                  <span>2020</span>
+                  <span>2024</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="text-center">
-            <button
-              onClick={submitGuess}
-              disabled={!guessedSubreddit.trim()}
-              className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg text-lg sm:text-xl transition-colors"
-            >
-              Submit Guess
-            </button>
-            {gameMode === 'multiplayer' && (
-              <p className="text-sm text-gray-400 mt-2">
-                🔴 Live: Other players are guessing too!
-              </p>
+            {waitingForOthers ? (
+              <div>
+                <button
+                  disabled
+                  className="w-full sm:w-auto bg-gray-600 cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg text-base"
+                >
+                  Waiting for Others...
+                </button>
+                <p className="text-sm text-yellow-400 mt-2">
+                  ⏳ Waiting for other players to submit their guesses
+                </p>
+              </div>
+            ) : (
+              <div>
+                <button
+                  onClick={submitGuess}
+                  disabled={!guessedSubreddit.trim()}
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg text-base transition-colors"
+                >
+                  Submit Guess
+                </button>
+                {gameMode === 'multiplayer' && (
+                  <p className="text-sm text-gray-400 mt-2">
+                    🔴 Live: Round {multiplayerRound}/5
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -1782,6 +2424,231 @@ export const App = () => {
             >
               🎮 Play Solo Mode
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Multiplayer final results screen
+  if (currentScreen === 'multiplayer-final' && multiplayerRoom) {
+    const sortedPlayers = [...multiplayerRoom.players].sort((a, b) => b.score - a.score);
+
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-4">
+        <div className="max-w-4xl mx-auto py-8">
+          <h2 className="text-4xl font-bold mb-6 text-center text-gold-500">🏆 Game Over!</h2>
+
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 className="text-2xl font-bold mb-4 text-center text-orange-400">Final Leaderboard</h3>
+            <div className="space-y-3">
+              {sortedPlayers.map((player, index) => (
+                <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}
+                    </span>
+                    <span className="font-bold text-white">{player.username}</span>
+                    {player.username === username && (
+                      <span className="text-orange-400 text-sm">(You)</span>
+                    )}
+                  </div>
+                  <span className="text-xl font-bold text-green-400">{player.score} pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <button
+              onClick={() => {
+                setCurrentScreen('menu');
+                setMultiplayerRoom(null);
+                setMultiplayerRound(1);
+                setWaitingForOthers(false);
+                setAllPlayersSubmitted(false);
+                setGameStarted(false);
+                setGameMode('solo'); // Reset to solo when leaving multiplayer
+              }}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors"
+            >
+              Back to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tutorial/How to Play screen
+  if (currentScreen === 'tutorial') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-blue-900 text-white p-4">
+        <div className="max-w-4xl mx-auto py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold text-purple-400">📚 How to Play LezGuess</h1>
+            <button
+              onClick={() => setCurrentScreen('menu')}
+              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg"
+            >
+              Back to Menu
+            </button>
+          </div>
+
+          <div className="space-y-8">
+            {/* Game Overview */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-orange-400 mb-4">🎯 What is LezGuess?</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-lg text-gray-300 mb-4">
+                    <strong>LezGuess</strong> is the ultimate Reddit history challenge! Test your knowledge of legendary Reddit posts that shaped internet culture from 2005 to 2024.
+                  </p>
+                  <ul className="space-y-2 text-gray-300">
+                    <li>• <strong>50 Curated Posts:</strong> EA's downvoted comment, Boston bomber, Keanu memes, and more!</li>
+                    <li>• <strong>Real Reddit Data:</strong> Live subreddit stats via Reddit API</li>
+                    <li>• <strong>Multiple Game Modes:</strong> Solo, Daily Challenge, Multiplayer</li>
+                    <li>• <strong>Achievement System:</strong> Build streaks and climb leaderboards</li>
+                  </ul>
+                </div>
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-blue-400 mb-2">🏆 Sample Post</h3>
+                  <div className="bg-gray-900 rounded p-3 text-sm">
+                    <p className="text-orange-400 mb-1">r/??? • Posted by u/[REDACTED] • 2017</p>
+                    <p className="text-white mb-2">"The intent is to provide players with a sense of pride and accomplishment..."</p>
+                    <p className="text-gray-400 text-xs">💬 -667,000 upvotes • Most downvoted comment in Reddit history</p>
+                  </div>
+                  <p className="text-green-400 text-sm mt-2">Answer: r/StarWarsBattlefront</p>
+                </div>
+              </div>
+            </div>
+
+            {/* How to Play */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-green-400 mb-4">🎮 How to Play</h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">1️⃣</div>
+                  <h3 className="text-lg font-bold text-blue-400 mb-2">Read the Post</h3>
+                  <p className="text-gray-300 text-sm">
+                    You'll see a legendary Reddit post with the subreddit hidden. Read the content and context clues.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl mb-2">2️⃣</div>
+                  <h3 className="text-lg font-bold text-blue-400 mb-2">Make Your Guess</h3>
+                  <p className="text-gray-300 text-sm">
+                    Choose the subreddit from multiple choice options and guess the year (2005-2024).
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl mb-2">3️⃣</div>
+                  <h3 className="text-lg font-bold text-blue-400 mb-2">Score Points</h3>
+                  <p className="text-gray-300 text-sm">
+                    Perfect guess = 200 points! Partial credit for close years. Build streaks for achievements.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Game Modes */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-blue-400 mb-4">🎯 Game Modes</h2>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-orange-700 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-white mb-2">🎯 Solo Challenge</h3>
+                  <p className="text-orange-100 text-sm">
+                    Practice mode with unlimited rounds. Build your streak and master Reddit history!
+                  </p>
+                </div>
+                <div className="bg-purple-700 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-white mb-2">📅 Daily Challenge</h3>
+                  <p className="text-purple-100 text-sm">
+                    One chance per day! Compete on the global leaderboard with other players.
+                  </p>
+                </div>
+                <div className="bg-blue-700 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-white mb-2">👥 Multiplayer</h3>
+                  <p className="text-blue-100 text-sm">
+                    Real-time multiplayer rooms! Create or join rooms with friends for live competition.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Technical Features */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-yellow-400 mb-4">⚡ Technical Features</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-bold text-green-400 mb-2">🔗 Real Reddit Integration</h3>
+                  <ul className="space-y-1 text-gray-300 text-sm">
+                    <li>• Live subreddit data via Reddit API</li>
+                    <li>• Authentic Reddit post styling</li>
+                    <li>• Real subscriber counts and stats</li>
+                    <li>• Cached for performance</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-blue-400 mb-2">🚀 Advanced Multiplayer</h3>
+                  <ul className="space-y-1 text-gray-300 text-sm">
+                    <li>• Real-time rooms using Redis polling</li>
+                    <li>• Synchronized questions and answers</li>
+                    <li>• Live player status updates</li>
+                    <li>• Platform-compliant (no WebSockets)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Kiro Development */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-red-400 mb-4">🛠️ Built with Kiro Automation</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-bold text-orange-400 mb-2">6 Advanced Hooks Created</h3>
+                  <ul className="space-y-1 text-gray-300 text-sm">
+                    <li>• Auto-testing on every save</li>
+                    <li>• Content validation for Reddit posts</li>
+                    <li>• Performance monitoring</li>
+                    <li>• Real-time multiplayer management</li>
+                    <li>• Code quality enforcement</li>
+                    <li>• Deployment automation</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-purple-400 mb-2">Developer Experience</h3>
+                  <ul className="space-y-1 text-gray-300 text-sm">
+                    <li>• Saved hours of manual testing</li>
+                    <li>• Ensured consistent code quality</li>
+                    <li>• Automated complex workflows</li>
+                    <li>• Creative solutions for platform limits</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className="text-center bg-gradient-to-r from-orange-600 to-purple-600 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-white mb-4">Ready to Test Your Reddit Knowledge? 🚀</h2>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => {
+                    setGameMode('solo');
+                    startNewRound();
+                  }}
+                  className="bg-white text-orange-600 font-bold py-3 px-6 rounded-lg text-lg hover:bg-gray-100 transition-colors"
+                >
+                  🎯 Start Solo Challenge
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('menu')}
+                  className="bg-transparent border-2 border-white text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-white hover:text-purple-600 transition-colors"
+                >
+                  📋 Back to Menu
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
