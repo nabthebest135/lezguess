@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Add custom CSS for the year slider
+// Add custom CSS for the year slider and screen shake
 const sliderStyles = `
   .slider {
     -webkit-appearance: none;
@@ -35,722 +35,31 @@ const sliderStyles = `
     cursor: pointer;
     border: none;
   }
+  
+  @keyframes shake-correct {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+    20%, 40%, 60%, 80% { transform: translateX(3px); }
+  }
+  
+  @keyframes shake-partial {
+    0%, 100% { transform: translateX(0); }
+    25%, 75% { transform: translateX(-2px); }
+    50% { transform: translateX(2px); }
+  }
+  
+  .shake-correct {
+    animation: shake-correct 0.6s ease-in-out;
+  }
+  
+  .shake-partial {
+    animation: shake-partial 0.4s ease-in-out;
+  }
 `;
 
 // CSS will be injected in useEffect
 
-// Common subreddits for generating multiple choice options
-const COMMON_SUBREDDITS = [
-  'gaming', 'AskReddit', 'funny', 'pics', 'news', 'worldnews', 'todayilearned',
-  'movies', 'music', 'videos', 'IAmA', 'science', 'technology', 'politics',
-  'sports', 'television', 'books', 'food', 'DIY', 'LifeProTips', 'showerthoughts',
-  'mildlyinteresting', 'oddlysatisfying', 'wholesomememes', 'dankmemes',
-  'relationship_advice', 'tifu', 'confession', 'unpopularopinion', 'changemyview',
-  'explainlikeimfive', 'nostupidquestions', 'OutOfTheLoop', 'bestof',
-  'StarWarsBattlefront', 'circlejerk', 'WhatsInThisThing', 'legaladvice'
-];
-
-// Generate multiple choice options for a post
-const generateMultipleChoice = (correctSubreddit: string): string[] => {
-  if (!correctSubreddit) return [];
-  const options = [correctSubreddit];
-  const availableOptions = COMMON_SUBREDDITS.filter(sub => sub !== correctSubreddit);
-
-  // Add 3 random wrong options
-  while (options.length < 4 && availableOptions.length > 0) {
-    const randomSub = availableOptions[Math.floor(Math.random() * availableOptions.length)];
-    if (randomSub && !options.includes(randomSub)) {
-      options.push(randomSub);
-    }
-  }
-
-  // Shuffle the options
-  return options.sort(() => Math.random() - 0.5);
-};
-
-// Mystery Reddit posts for the guessing game - Legendary Reddit moments
-const MYSTERY_POSTS = [
-  {
-    id: 1,
-    content: "The intent is to provide players with a sense of pride and accomplishment for unlocking different heroes. As for cost, we selected initial values based upon data from the Open Beta and other adjustments made to milestone rewards before launch. Among other things, we're looking at average per-player credit earn rates on a daily basis, and we'll be making constant adjustments to ensure that players have challenges that are compelling, rewarding, and of course attainable via gameplay.",
-    subreddit: "StarWarsBattlefront",
-    year: 2017,
-    context: "EA's response to microtransactions controversy - became most downvoted comment in Reddit history",
-    upvotes: -667000,
-    difficulty: "easy"
-  },
-  {
-    id: 2,
-    content: "BREAKING: We did it Reddit! Boston bomber caught! The FBI has confirmed that the suspect has been apprehended after an intensive manhunt. This is a victory for crowdsourced investigation and shows the power of the internet community working together to solve crimes.",
-    subreddit: "news",
-    year: 2013,
-    context: "Reddit's infamous misidentification during Boston Marathon bombing investigation",
-    upvotes: 3000,
-    difficulty: "hard"
-  },
-  {
-    id: 3,
-    content: "Holy shit, Keanu Reeves just walked out on stage at E3! He's in Cyberpunk 2077! When someone in the audience yelled 'You're breathtaking!' he pointed back and said 'No, you're breathtaking! You're all breathtaking!' This man is a treasure and CD Projekt Red just won E3.",
-    subreddit: "gaming",
-    year: 2019,
-    context: "E3 Cyberpunk 2077 announcement with Keanu Reeves surprise appearance",
-    upvotes: 89000,
-    difficulty: "medium"
-  },
-  {
-    id: 4,
-    content: "Question: 'If you could have sex with one person from history, who would it be?' Top answer: 'My wife. She passed away two years ago from cancer and I miss her every day.' Reply: 'I also choose this guy's dead wife.' *gets 45k upvotes*",
-    subreddit: "AskReddit",
-    year: 2017,
-    context: "Legendary dark humor response that became Reddit folklore",
-    upvotes: 45000,
-    difficulty: "medium"
-  },
-  {
-    id: 5,
-    content: "Thanks for the gold, kind stranger!",
-    subreddit: "circlejerk",
-    year: 2012,
-    context: "Classic Reddit gold response meme",
-    upvotes: 12000,
-    difficulty: "easy"
-  },
-  {
-    id: 6,
-    content: "Banana for scale",
-    subreddit: "pics",
-    year: 2013,
-    context: "Origin of the banana scale meme",
-    upvotes: 25000,
-    difficulty: "medium"
-  },
-  {
-    id: 7,
-    content: "Test post please ignore",
-    subreddit: "pics",
-    year: 2012,
-    context: "Most upvoted 'please ignore' post",
-    upvotes: 23000,
-    difficulty: "hard"
-  },
-  {
-    id: 8,
-    content: "Broken arms",
-    subreddit: "IAmA",
-    year: 2012,
-    context: "Infamous Reddit story reference",
-    upvotes: 15000,
-    difficulty: "hard"
-  },
-  {
-    id: 9,
-    content: "When does the narwhal bacon?",
-    subreddit: "reddit.com",
-    year: 2009,
-    context: "Early Reddit secret handshake",
-    upvotes: 8000,
-    difficulty: "expert"
-  },
-  {
-    id: 10,
-    content: "Geraffes are so dumb",
-    subreddit: "pics",
-    year: 2009,
-    context: "Classic misspelling that became legendary",
-    upvotes: 5000,
-    difficulty: "expert"
-  },
-  {
-    id: 11,
-    content: "Today you, tomorrow me",
-    subreddit: "AskReddit",
-    year: 2010,
-    context: "Heartwarming story about helping strangers",
-    upvotes: 15000,
-    difficulty: "medium"
-  },
-  {
-    id: 12,
-    content: "AND MY AXE!",
-    subreddit: "reddit.com",
-    year: 2011,
-    context: "Lord of the Rings meme explosion",
-    upvotes: 8000,
-    difficulty: "easy"
-  },
-  {
-    id: 13,
-    content: "The safe",
-    subreddit: "WhatsInThisThing",
-    year: 2013,
-    context: "Most anticipated safe opening in Reddit history",
-    upvotes: 25000,
-    difficulty: "hard"
-  },
-  {
-    id: 14,
-    content: "Cumbox",
-    subreddit: "AskReddit",
-    year: 2012,
-    context: "Infamous Reddit confession",
-    upvotes: 12000,
-    difficulty: "expert"
-  },
-  {
-    id: 15,
-    content: "Ice soap and 2am chili",
-    subreddit: "pics",
-    year: 2011,
-    context: "Peak Reddit life hack era",
-    upvotes: 18000,
-    difficulty: "hard"
-  },
-  {
-    id: 16,
-    content: "Lawyer up, delete Facebook, hit the gym",
-    subreddit: "relationship_advice",
-    year: 2010,
-    context: "Classic Reddit relationship advice trinity",
-    upvotes: 8500,
-    difficulty: "easy"
-  },
-  {
-    id: 17,
-    content: "This.",
-    subreddit: "reddit.com",
-    year: 2008,
-    context: "The birth of the most overused Reddit comment",
-    upvotes: 2000,
-    difficulty: "expert"
-  },
-  {
-    id: 18,
-    content: "OP's mom",
-    subreddit: "AskReddit",
-    year: 2009,
-    context: "The ultimate Reddit comeback",
-    upvotes: 15000,
-    difficulty: "easy"
-  },
-  {
-    id: 19,
-    content: "Username checks out",
-    subreddit: "funny",
-    year: 2012,
-    context: "When usernames perfectly match comments",
-    upvotes: 12000,
-    difficulty: "medium"
-  },
-  {
-    id: 20,
-    content: "Instructions unclear, got dick stuck in ceiling fan",
-    subreddit: "tifu",
-    year: 2013,
-    context: "Peak Reddit absurdist humor",
-    upvotes: 25000,
-    difficulty: "medium"
-  },
-  {
-    id: 21,
-    content: "Jolly Rancher",
-    subreddit: "AskReddit",
-    year: 2011,
-    context: "The story that scarred Reddit forever",
-    upvotes: 8000,
-    difficulty: "expert"
-  },
-  {
-    id: 22,
-    content: "Swamps of Dagobah",
-    subreddit: "AskReddit",
-    year: 2014,
-    context: "Medical horror story that became legend",
-    upvotes: 45000,
-    difficulty: "hard"
-  },
-  {
-    id: 23,
-    content: "Kevin",
-    subreddit: "AskReddit",
-    year: 2014,
-    context: "The dumbest student ever story",
-    upvotes: 35000,
-    difficulty: "medium"
-  },
-  {
-    id: 24,
-    content: "Streetlamp Le Moose",
-    subreddit: "AskReddit",
-    year: 2012,
-    context: "Legendary fictional character story",
-    upvotes: 28000,
-    difficulty: "hard"
-  },
-  {
-    id: 25,
-    content: "My family poops big. Like, really big. So big that our toilet would get clogged regularly. My dad kept an old rusty kitchen knife in the bathroom to chop up the turds so they would flush. We called it the poop knife. I thought every family had one until I was 22 and asked my girlfriend's family where their poop knife was. The silence was deafening.",
-    subreddit: "confession",
-    year: 2018,
-    context: "The most disturbing family secret that became a Reddit legend",
-    upvotes: 55000,
-    difficulty: "medium"
-  },
-  {
-    id: 26,
-    content: "TIFU by using a coconut as a... personal pleasure device. I'm a 16-year-old male and discovered that a coconut with a hole drilled in it makes for an interesting experience. After a week of use, I noticed a strange smell. When I cracked it open, it was full of rotting coconut flesh and maggots. I may have given myself an infection. Don't use coconuts, people.",
-    subreddit: "tifu",
-    year: 2017,
-    context: "The infamous coconut TIFU that traumatized Reddit",
-    upvotes: 85000,
-    difficulty: "easy"
-  },
-  {
-    id: 27,
-    content: "We did it Reddit!",
-    subreddit: "circlejerk",
-    year: 2013,
-    context: "Celebrating premature victories",
-    upvotes: 15000,
-    difficulty: "easy"
-  },
-  {
-    id: 28,
-    content: "The narwhal bacons at midnight",
-    subreddit: "reddit.com",
-    year: 2009,
-    context: "Secret Reddit meetup phrase",
-    upvotes: 12000,
-    difficulty: "expert"
-  },
-  {
-    id: 29,
-    content: "Tree fiddy",
-    subreddit: "funny",
-    year: 2010,
-    context: "South Park meme that took over Reddit",
-    upvotes: 20000,
-    difficulty: "medium"
-  },
-  {
-    id: 30,
-    content: "Mom's spaghetti",
-    subreddit: "hiphopheads",
-    year: 2012,
-    context: "Eminem lyrics became Reddit meme",
-    upvotes: 18000,
-    difficulty: "easy"
-  },
-  {
-    id: 31,
-    content: "Decoy snail",
-    subreddit: "AskReddit",
-    year: 2016,
-    context: "Immortal snail hypothetical response",
-    upvotes: 42000,
-    difficulty: "medium"
-  },
-  {
-    id: 32,
-    content: "5/7 perfect score",
-    subreddit: "funny",
-    year: 2015,
-    context: "Brendan Sullivan's perfect rating system",
-    upvotes: 38000,
-    difficulty: "medium"
-  },
-  {
-    id: 33,
-    content: "Rampart",
-    subreddit: "IAmA",
-    year: 2012,
-    context: "Woody Harrelson's disastrous AMA",
-    upvotes: 15000,
-    difficulty: "hard"
-  },
-  {
-    id: 34,
-    content: "Double dick dude",
-    subreddit: "IAmA",
-    year: 2014,
-    context: "Most famous anatomy AMA",
-    upvotes: 65000,
-    difficulty: "medium"
-  },
-  {
-    id: 35,
-    content: "Unidan jackdaw copypasta",
-    subreddit: "AdviceAnimals",
-    year: 2014,
-    context: "Here's the thing about crows vs jackdaws",
-    upvotes: 25000,
-    difficulty: "hard"
-  },
-  {
-    id: 36,
-    content: "Colby 2012",
-    subreddit: "AskReddit",
-    year: 2012,
-    context: "The dog abuse story that divided Reddit",
-    upvotes: 12000,
-    difficulty: "expert"
-  },
-  {
-    id: 37,
-    content: "Doritos story",
-    subreddit: "AskReddit",
-    year: 2011,
-    context: "The most disgusting Reddit story ever",
-    upvotes: 8000,
-    difficulty: "expert"
-  },
-  {
-    id: 38,
-    content: "Reddit switcharoo",
-    subreddit: "pics",
-    year: 2011,
-    context: "The endless chain of switched perspectives",
-    upvotes: 22000,
-    difficulty: "hard"
-  },
-  {
-    id: 39,
-    content: "Wadsworth constant",
-    subreddit: "videos",
-    year: 2011,
-    context: "Skip to 30% of any video for the good part",
-    upvotes: 18000,
-    difficulty: "hard"
-  },
-  {
-    id: 40,
-    content: "Godwin's Law",
-    subreddit: "todayilearned",
-    year: 2010,
-    context: "Every internet argument ends with Hitler",
-    upvotes: 15000,
-    difficulty: "medium"
-  },
-  {
-    id: 41,
-    content: "OP is a bundle of sticks",
-    subreddit: "4chan",
-    year: 2011,
-    context: "4chan meme that crossed to Reddit",
-    upvotes: 10000,
-    difficulty: "hard"
-  },
-  {
-    id: 42,
-    content: "Banana for scale",
-    subreddit: "WTF",
-    year: 2013,
-    context: "The universal Reddit measurement system",
-    upvotes: 35000,
-    difficulty: "easy"
-  },
-  {
-    id: 43,
-    content: "Edit: Thanks for the gold!",
-    subreddit: "circlejerk",
-    year: 2012,
-    context: "The most predictable Reddit edit",
-    upvotes: 20000,
-    difficulty: "easy"
-  },
-  {
-    id: 44,
-    content: "Came here to say this",
-    subreddit: "circlejerk",
-    year: 2010,
-    context: "The most redundant Reddit comment",
-    upvotes: 5000,
-    difficulty: "easy"
-  },
-  {
-    id: 45,
-    content: "Sauce?",
-    subreddit: "pics",
-    year: 2009,
-    context: "Reddit's way of asking for source",
-    upvotes: 8000,
-    difficulty: "medium"
-  },
-  {
-    id: 46,
-    content: "OP will surely deliver",
-    subreddit: "funny",
-    year: 2011,
-    context: "Waiting for OP to follow up",
-    upvotes: 12000,
-    difficulty: "medium"
-  },
-  {
-    id: 47,
-    content: "RIP inbox",
-    subreddit: "AskReddit",
-    year: 2012,
-    context: "When your comment blows up",
-    upvotes: 15000,
-    difficulty: "easy"
-  },
-  {
-    id: 48,
-    content: "Deleted by user",
-    subreddit: "reddit.com",
-    year: 2008,
-    context: "The coward's way out",
-    upvotes: 3000,
-    difficulty: "medium"
-  },
-  {
-    id: 49,
-    content: "Username relevant",
-    subreddit: "funny",
-    year: 2011,
-    context: "When username perfectly matches situation",
-    upvotes: 10000,
-    difficulty: "medium"
-  },
-  {
-    id: 50,
-    content: "Reddit hug of death",
-    subreddit: "technology",
-    year: 2010,
-    context: "When Reddit traffic kills websites",
-    upvotes: 25000,
-    difficulty: "medium"
-  },
-  // LEGENDARY MEMES & VIRAL MOMENTS
-  {
-    id: 51,
-    content: "Rickroll",
-    subreddit: "funny",
-    year: 2008,
-    context: "Never gonna give you up became Reddit's favorite prank",
-    upvotes: 50000,
-    difficulty: "easy"
-  },
-  {
-    id: 52,
-    content: "All your base are belong to us",
-    subreddit: "gaming",
-    year: 2006,
-    context: "Classic gaming meme that dominated early Reddit",
-    upvotes: 15000,
-    difficulty: "hard"
-  },
-  {
-    id: 53,
-    content: "Chocolate Rain",
-    subreddit: "videos",
-    year: 2007,
-    context: "Tay Zonday's viral hit that Reddit obsessed over",
-    upvotes: 35000,
-    difficulty: "medium"
-  },
-  {
-    id: 54,
-    content: "Double Rainbow",
-    subreddit: "videos",
-    year: 2010,
-    context: "Bear's ecstatic rainbow reaction video",
-    upvotes: 28000,
-    difficulty: "medium"
-  },
-  {
-    id: 55,
-    content: "Nyan Cat",
-    subreddit: "funny",
-    year: 2011,
-    context: "Pop-Tart cat with rainbow trail",
-    upvotes: 42000,
-    difficulty: "easy"
-  },
-  // REDDIT DRAMA & CONTROVERSIES
-  {
-    id: 56,
-    content: "Ellen Pao resignation",
-    subreddit: "announcements",
-    year: 2015,
-    context: "Reddit CEO controversy and blackout protests",
-    upvotes: 85000,
-    difficulty: "medium"
-  },
-  {
-    id: 57,
-    content: "Victoria Taylor firing",
-    subreddit: "OutOfTheLoop",
-    year: 2015,
-    context: "AMA coordinator firing that sparked site-wide protests",
-    upvotes: 65000,
-    difficulty: "hard"
-  },
-  {
-    id: 58,
-    content: "The Button",
-    subreddit: "thebutton",
-    year: 2015,
-    context: "April Fools experiment that divided Reddit",
-    upvotes: 75000,
-    difficulty: "medium"
-  },
-  {
-    id: 59,
-    content: "r/place",
-    subreddit: "place",
-    year: 2017,
-    context: "Collaborative pixel art experiment",
-    upvotes: 95000,
-    difficulty: "easy"
-  },
-  {
-    id: 60,
-    content: "Spez editing comments",
-    subreddit: "The_Donald",
-    year: 2016,
-    context: "Reddit CEO caught editing user comments",
-    upvotes: 55000,
-    difficulty: "hard"
-  },
-  // GAMING & TECH MOMENTS
-  {
-    id: 61,
-    content: "Half-Life 3 confirmed",
-    subreddit: "gaming",
-    year: 2012,
-    context: "The meme that never dies",
-    upvotes: 78000,
-    difficulty: "easy"
-  },
-  {
-    id: 62,
-    content: "Portal cake is a lie",
-    subreddit: "gaming",
-    year: 2007,
-    context: "Portal's famous lie about cake rewards",
-    upvotes: 45000,
-    difficulty: "medium"
-  },
-  {
-    id: 63,
-    content: "Minecraft creeper",
-    subreddit: "Minecraft",
-    year: 2010,
-    context: "That's a nice everything you have there...",
-    upvotes: 67000,
-    difficulty: "easy"
-  },
-  {
-    id: 64,
-    content: "Steam Summer Sale wallet death",
-    subreddit: "gaming",
-    year: 2011,
-    context: "Gabe Newell taking all our money",
-    upvotes: 52000,
-    difficulty: "medium"
-  },
-  {
-    id: 65,
-    content: "iPhone vs Android wars",
-    subreddit: "technology",
-    year: 2010,
-    context: "The eternal smartphone debate",
-    upvotes: 38000,
-    difficulty: "easy"
-  },
-  // WHOLESOME & HEARTWARMING
-  {
-    id: 66,
-    content: "Mr. Rogers neighborhood",
-    subreddit: "todayilearned",
-    year: 2012,
-    context: "TIL posts about Fred Rogers being amazing",
-    upvotes: 89000,
-    difficulty: "medium"
-  },
-  {
-    id: 67,
-    content: "Bob Ross happy little trees",
-    subreddit: "GetMotivated",
-    year: 2014,
-    context: "Joy of Painting became Reddit's therapy",
-    upvotes: 76000,
-    difficulty: "easy"
-  },
-  {
-    id: 68,
-    content: "TIL Steve Irwin's last words were 'Don't worry, they usually don't swim backwards.' He was filming a documentary about stingrays when one struck him in the chest. Even in his final moments, he was trying to educate and reassure others. The Crocodile Hunter died doing what he loved - sharing his passion for wildlife with the world.",
-    subreddit: "todayilearned",
-    year: 2011,
-    context: "Remembering the legendary wildlife educator Steve Irwin",
-    upvotes: 92000,
-    difficulty: "medium"
-  },
-  {
-    id: 69,
-    content: "Robin Williams tribute",
-    subreddit: "movies",
-    year: 2014,
-    context: "Reddit's massive outpouring of love",
-    upvotes: 125000,
-    difficulty: "medium"
-  },
-  {
-    id: 70,
-    content: "Grumpy Cat",
-    subreddit: "AdviceAnimals",
-    year: 2012,
-    context: "Tardar Sauce became internet royalty",
-    upvotes: 68000,
-    difficulty: "easy"
-  },
-  // SCIENCE & SPACE
-  {
-    id: 71,
-    content: "Mars Curiosity rover landing",
-    subreddit: "space",
-    year: 2012,
-    context: "Seven minutes of terror success",
-    upvotes: 87000,
-    difficulty: "medium"
-  },
-  {
-    id: 72,
-    content: "Higgs boson discovery",
-    subreddit: "science",
-    year: 2012,
-    context: "The God particle finally found",
-    upvotes: 72000,
-    difficulty: "hard"
-  },
-  {
-    id: 73,
-    content: "HOLY SHIT! Elon Musk actually did it! The Falcon Heavy just launched successfully and they put a Tesla Roadster in space with a mannequin in a spacesuit listening to David Bowie's 'Space Oddity.' The two side boosters landed simultaneously back on Earth. This is the most Elon Musk thing ever and I'm crying tears of joy watching this live stream.",
-    subreddit: "SpaceX",
-    year: 2018,
-    context: "SpaceX Falcon Heavy debut launch with Tesla Roadster and Starman",
-    upvotes: 156000,
-    difficulty: "easy"
-  },
-  {
-    id: 74,
-    content: "First black hole image",
-    subreddit: "space",
-    year: 2019,
-    context: "Event Horizon Telescope breakthrough",
-    upvotes: 134000,
-    difficulty: "medium"
-  },
-  {
-    id: 75,
-    content: "Pluto is not a planet",
-    subreddit: "todayilearned",
-    year: 2006,
-    context: "IAU reclassification controversy",
-    upvotes: 45000,
-    difficulty: "medium"
-  }
-];
+// CLIENT-SIDE STATE - NO ANSWERS STORED HERE
 
 export const App = () => {
   const [currentPost, setCurrentPost] = useState<any>(null);
@@ -796,6 +105,11 @@ export const App = () => {
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [lastGuessCorrect, setLastGuessCorrect] = useState<boolean | null>(null);
   const [lastGuessPartial, setLastGuessPartial] = useState(false);
+  const [screenShake, setScreenShake] = useState<string | null>(null);
+  const [currentAnswerId, setCurrentAnswerId] = useState<string | null>(null);
+  const [revealedAnswer, setRevealedAnswer] = useState<{ subreddit: string, year: number } | null>(null);
+
+  const [difficulty, setDifficulty] = useState('difficult'); // 'easy', 'difficult'
 
   // Load player data from server
   const loadPlayerData = async () => {
@@ -830,6 +144,8 @@ export const App = () => {
       console.error('Failed to save player data:', error);
     }
   };
+
+
 
   // Initialize app and load player data
   useEffect(() => {
@@ -960,42 +276,7 @@ export const App = () => {
     };
   }, [multiplayerRoom?.code, playersInRoom.length, currentScreen]);
 
-  // Real-time multiplayer guess submission
-  const submitMultiplayerGuess = async (guess: any, score: number) => {
-    if (!multiplayerRoom?.code) return;
-
-    try {
-      setWaitingForOthers(true);
-
-      const response = await fetch('/api/multiplayer/submit-guess', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomCode: multiplayerRoom.code,
-          guess,
-          score,
-          username
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.allSubmitted) {
-          // All players submitted, show results
-          setAllPlayersSubmitted(true);
-          setMultiplayerGuesses(data.room.roundGuesses);
-          setMultiplayerRoom(data.room);
-          setWaitingForOthers(false);
-
-          // Set a flag to indicate results are being shown
-          // The polling will detect round progression and advance all players
-        }
-      }
-    } catch (error) {
-      console.error('Failed to submit multiplayer guess:', error);
-      setWaitingForOthers(false);
-    }
-  };
+  // REMOVED: submitMultiplayerGuess - now handled in submitGuess with server-side validation
 
   // Fetch live Reddit data for enhanced experience
   const fetchLiveRedditData = async (subreddit: string) => {
@@ -1026,6 +307,21 @@ export const App = () => {
       }
     } catch (error) {
       console.error('Failed to fetch community stats:', error);
+    }
+  };
+
+  // Fetch real community guesses
+  const fetchCommunityGuesses = async () => {
+    try {
+      const response = await fetch('/api/community/recent-guesses');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success') {
+          setRecentGuesses(data.guesses);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch community guesses:', error);
     }
   };
 
@@ -1066,6 +362,20 @@ export const App = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Poll community guesses when on community screen
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (currentScreen === 'community') {
+      fetchCommunityGuesses(); // Initial fetch
+      interval = setInterval(fetchCommunityGuesses, 10000); // Every 10 seconds
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [currentScreen]);
+
   // Game timer countdown
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -1094,8 +404,7 @@ export const App = () => {
       return;
     }
 
-    let randomPost;
-
+    let postData;
     let multiplayerOptions: string[] = [];
 
     // In multiplayer, get the post from server to ensure all players see the same question
@@ -1104,47 +413,47 @@ export const App = () => {
         const response = await fetch(`/api/multiplayer/current-post/${multiplayerRoom.code}`);
         if (response.ok) {
           const data = await response.json();
-          randomPost = data.post;
+          postData = data.post;
           multiplayerOptions = data.options || [];
         } else {
-          // Fallback to random post if server fails
-          randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+          console.error('Failed to fetch multiplayer post');
+          return;
         }
       } catch (error) {
         console.error('Failed to fetch multiplayer post:', error);
-        // Fallback to random post
-        randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+        return;
       }
     } else {
-      // Solo/daily mode - use random post
-      randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+      // Solo/daily mode - get random post from server (NO ANSWERS SENT TO CLIENT)
+      try {
+        const response = await fetch('/api/game/random-post');
+        if (response.ok) {
+          const data = await response.json();
+          postData = data.post;
+          multiplayerOptions = data.options || [];
+          setCurrentAnswerId(data.answerId); // Store answer ID for validation
+        } else {
+          console.error('Failed to fetch random post');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch random post:', error);
+        return;
+      }
     }
 
-    setCurrentPost(randomPost);
+    setCurrentPost(postData);
     setCurrentScreen('game');
     setGuessedSubreddit('');
     setGuessedYear(2020);
+    setRevealedAnswer(null); // Clear previous answer
 
-    // Generate multiple choice options for subreddit
-    if (randomPost?.subreddit) {
-      // In multiplayer, use server-provided options; otherwise generate locally
-      if (multiplayerRoom && multiplayerOptions.length > 0) {
-        setSubredditOptions(multiplayerOptions);
-      } else {
-        setSubredditOptions(generateMultipleChoice(randomPost.subreddit));
-      }
-      // Fetch real Reddit data for this subreddit
-      fetchRedditData(randomPost.subreddit);
-    }
+    // Use server-provided options
+    setSubredditOptions(multiplayerOptions);
 
     // Start timer for all game modes to add pressure
     setGameTimer(60);
     setTimerActive(true);
-
-    // Fetch live Reddit data for the current post
-    if (randomPost?.subreddit) {
-      fetchLiveRedditData(randomPost.subreddit);
-    }
   };
 
   const goToMenu = () => {
@@ -1164,35 +473,96 @@ export const App = () => {
 
   const showCommunityScreen = () => {
     setCurrentScreen('community');
+    fetchCommunityGuesses(); // Load real data when showing community screen
   };
 
-  const calculateScore = (guess: any, actual: any) => {
-    let roundScore = 0;
+  // REMOVED: calculateScore - now done server-side for security
 
-    // Subreddit scoring (exact match = 100 points)
-    if (guess.subreddit.toLowerCase() === actual.subreddit.toLowerCase()) {
-      roundScore += 100;
-    }
-
-    // Year scoring (only award points if within 5 years, max 100)
-    const yearDiff = Math.abs(guess.year - actual.year);
-    if (yearDiff <= 5) {
-      const yearScore = Math.max(0, 100 - (yearDiff * 20));
-      roundScore += yearScore;
-    }
-
-    return roundScore;
-  };
-
-  const submitGuess = () => {
+  const submitGuess = async () => {
     if (!currentPost) return;
 
-    const guess = { subreddit: guessedSubreddit, year: guessedYear };
-    const roundScore = calculateScore(guess, currentPost);
+    let validationResult;
 
-    const isCorrectSubreddit = guess.subreddit.toLowerCase() === currentPost.subreddit.toLowerCase();
-    const isCorrectYear = guess.year === currentPost.year;
-    const isPerfectGuess = isCorrectSubreddit && isCorrectYear;
+    // Handle multiplayer vs solo/daily differently
+    if (gameMode === 'multiplayer' && multiplayerRoom) {
+      // Multiplayer: submit to multiplayer endpoint
+      try {
+        setWaitingForOthers(true);
+        const response = await fetch('/api/multiplayer/submit-guess', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomCode: multiplayerRoom.code,
+            guessedSubreddit,
+            guessedYear,
+            username
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          validationResult = {
+            score: data.playerScore,
+            correctAnswer: data.correctAnswer,
+            isCorrectSubreddit: guessedSubreddit.toLowerCase() === data.correctAnswer.subreddit.toLowerCase(),
+            isCorrectYear: guessedYear === data.correctAnswer.year,
+            isPerfect: guessedSubreddit.toLowerCase() === data.correctAnswer.subreddit.toLowerCase() && guessedYear === data.correctAnswer.year
+          };
+
+          if (data.allSubmitted) {
+            setAllPlayersSubmitted(true);
+            setMultiplayerGuesses(data.room.roundGuesses);
+            setMultiplayerRoom(data.room);
+            setWaitingForOthers(false);
+          }
+        } else {
+          console.error('Failed to submit multiplayer guess');
+          setWaitingForOthers(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to submit multiplayer guess:', error);
+        setWaitingForOthers(false);
+        return;
+      }
+    } else {
+      // Solo/Daily: validate with server
+      if (!currentAnswerId) {
+        console.error('No answer ID available');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/game/validate-guess', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            answerId: currentAnswerId,
+            guessedSubreddit,
+            guessedYear: difficulty === 'easy' ? null : guessedYear, // Don't send year in easy mode
+            difficulty
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          validationResult = data;
+        } else {
+          console.error('Failed to validate guess');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to validate guess:', error);
+        return;
+      }
+    }
+
+    // Store correct answer separately for display (not in currentPost to avoid exposure)
+    const correctAnswer = validationResult.correctAnswer;
+    setRevealedAnswer(correctAnswer);
+
+    const roundScore = validationResult.score;
+    const isPerfectGuess = validationResult.isPerfect;
 
     // STREAK SYSTEM - The dopamine mechanic!
     if (isPerfectGuess) {
@@ -1205,6 +575,10 @@ export const App = () => {
       setLastGuessCorrect(true);
       setLastGuessPartial(false);
       setShowStreakAnimation(true);
+      
+      // Screen shake for perfect answer!
+      setScreenShake('shake-correct');
+      setTimeout(() => setScreenShake(null), 600);
 
       // Update best streak
       if (newStreak > bestStreak) {
@@ -1212,7 +586,7 @@ export const App = () => {
       }
 
       // Save progress to server
-      setTimeout(() => savePlayerData(), 100); // Small delay to ensure state is updated
+      setTimeout(() => savePlayerData(), 100);
 
       // Add score for perfect guess
       setScore(score + roundScore);
@@ -1227,6 +601,10 @@ export const App = () => {
       if (roundScore > 0) {
         setLastGuessCorrect(null); // Neither true nor false - it's partial
         setLastGuessPartial(true);
+        
+        // Screen shake for partial answer
+        setScreenShake('shake-partial');
+        setTimeout(() => setScreenShake(null), 400);
       } else {
         setLastGuessCorrect(false); // Completely wrong
         setLastGuessPartial(false);
@@ -1248,11 +626,6 @@ export const App = () => {
     setShowResult(true);
     setLastScore(roundScore);
 
-    // Handle multiplayer guess submission BEFORE showing result screen
-    if (gameMode === 'multiplayer' && multiplayerRoom) {
-      submitMultiplayerGuess(guess, roundScore);
-    }
-
     setCurrentScreen('result');
 
     // Check for achievements
@@ -1261,16 +634,22 @@ export const App = () => {
     // Report game completion for real stats
     reportGameCompletion(roundScore, isPerfectGuess);
 
-    // Add to community feed
-    const guessResult = {
-      username: username || 'Anonymous',
-      post: currentPost.content.substring(0, 50) + "...",
-      guessedSubreddit: guess.subreddit,
-      actualSubreddit: currentPost.subreddit,
-      score: roundScore,
-      timestamp: new Date().toLocaleString()
-    };
-    setRecentGuesses(prev => [guessResult, ...prev].slice(0, 20));
+    // Add to community feed via API
+    try {
+      await fetch('/api/community/add-guess', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username || 'Anonymous',
+          post: currentPost.content,
+          guessedSubreddit,
+          actualSubreddit: validationResult.correctAnswer.subreddit,
+          score: roundScore
+        })
+      });
+    } catch (error) {
+      console.error('Failed to add guess to community feed:', error);
+    }
 
     // Update leaderboard via real API
     if (gameMode === 'daily') {
@@ -1428,12 +807,13 @@ export const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-900 via-gray-900 to-red-900 text-white p-4">
         <div className="flex flex-col justify-center items-center min-h-screen">
           <div className="text-center mb-8">
-            <div className="mb-4">
-              <span className="text-4xl sm:text-6xl">🔍</span>
+            <div className="mb-6">
+              <img 
+                src="/splash-art.svg" 
+                alt="LezGuess - Reddit History Challenge" 
+                className="w-32 h-32 sm:w-40 sm:h-40 mx-auto drop-shadow-2xl"
+              />
             </div>
-            <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-orange-400 tracking-tight">
-              LEZ<span className="text-white">GUESS</span>
-            </h1>
             <p className="text-base sm:text-xl mb-2 text-gray-300">The Ultimate Reddit History Challenge</p>
             <p className="text-sm sm:text-base mb-4 text-gray-400">Join the community and compete with redditors worldwide!</p>
 
@@ -1497,12 +877,13 @@ export const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-900 via-gray-900 to-red-900 text-white p-4">
         <div className="flex flex-col justify-center items-center min-h-screen">
           <div className="text-center mb-8">
-            <div className="mb-4">
-              <span className="text-4xl sm:text-6xl">🔍</span>
+            <div className="mb-6">
+              <img 
+                src="/splash-art.svg" 
+                alt="LezGuess - Reddit History Challenge" 
+                className="w-24 h-24 sm:w-32 sm:h-32 mx-auto drop-shadow-xl"
+              />
             </div>
-            <h1 className="text-3xl sm:text-5xl font-bold mb-4 text-orange-400 tracking-tight">
-              LEZ<span className="text-white">GUESS</span>
-            </h1>
             <p className="text-base sm:text-xl mb-2 text-gray-300">Welcome back, {username}!</p>
 
             {/* Player Stats Display */}
@@ -1520,6 +901,35 @@ export const App = () => {
             <p className="text-sm sm:text-base mb-4 text-gray-400">
               {bestStreak > 0 ? `Beat your streak of ${bestStreak}!` : 'Start your winning streak!'}
             </p>
+
+            {/* Difficulty Selection */}
+            <div className="bg-gray-800 rounded-lg p-4 mb-4">
+              <h3 className="text-lg font-bold text-orange-400 mb-3">🎚️ Difficulty Level</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setDifficulty('easy')}
+                  className={`p-3 rounded-lg font-bold transition-colors ${
+                    difficulty === 'easy' 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  🟢 Easy
+                  <div className="text-xs mt-1 opacity-75">Subreddit only</div>
+                </button>
+                <button
+                  onClick={() => setDifficulty('difficult')}
+                  className={`p-3 rounded-lg font-bold transition-colors ${
+                    difficulty === 'difficult' 
+                      ? 'bg-red-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  🔴 Difficult
+                  <div className="text-xs mt-1 opacity-75">Subreddit + Year</div>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 w-full max-w-md">
@@ -1609,6 +1019,8 @@ export const App = () => {
             >
               📚 How to Play
             </button>
+
+
           </div>
 
           <div className="mt-8 text-center text-gray-400">
@@ -1778,7 +1190,7 @@ export const App = () => {
 
           <div className="bg-gray-800 rounded-lg p-4 mb-4">
             <p className="text-base sm:text-lg mb-3 text-gray-300">"{currentPost.content}"</p>
-            <p className="text-sm text-gray-400">r/{currentPost.subreddit} • {currentPost.year}</p>
+            <p className="text-sm text-gray-400">r/{revealedAnswer?.subreddit || '???'} • {revealedAnswer?.year || '????'}</p>
             <p className="text-sm text-gray-400">{currentPost.context}</p>
           </div>
 
@@ -1808,7 +1220,7 @@ export const App = () => {
                           <span className="text-gray-400">Subreddit:</span>
                           <div className="flex items-center gap-2">
                             <span className="text-white">r/{guess.guess.subreddit}</span>
-                            {guess.guess.subreddit.toLowerCase() === currentPost?.subreddit.toLowerCase() ? (
+                            {guess.guess.subreddit.toLowerCase() === revealedAnswer?.subreddit.toLowerCase() ? (
                               <span className="text-green-400">✓</span>
                             ) : (
                               <span className="text-red-400">✗</span>
@@ -1819,10 +1231,10 @@ export const App = () => {
                           <span className="text-gray-400">Year:</span>
                           <div className="flex items-center gap-2">
                             <span className="text-white">{guess.guess.year}</span>
-                            {guess.guess.year === currentPost?.year ? (
+                            {guess.guess.year === revealedAnswer?.year ? (
                               <span className="text-green-400">✓</span>
                             ) : (
-                              <span className="text-red-400">✗ ({currentPost?.year})</span>
+                              <span className="text-red-400">✗ ({revealedAnswer?.year})</span>
                             )}
                           </div>
                         </div>
@@ -1841,7 +1253,7 @@ export const App = () => {
 
               <div className="mt-4 text-center">
                 <p className="text-sm text-gray-400">
-                  Correct answer: <span className="text-orange-400 font-bold">r/{currentPost?.subreddit}</span> • <span className="text-orange-400 font-bold">{currentPost?.year}</span>
+                  Correct answer: <span className="text-orange-400 font-bold">r/{revealedAnswer?.subreddit}</span> • <span className="text-orange-400 font-bold">{revealedAnswer?.year}</span>
                 </p>
               </div>
             </div>
@@ -1856,19 +1268,29 @@ export const App = () => {
 
                 {/* Score breakdown */}
                 <div className="bg-gray-700 rounded-lg p-4 mt-4 text-left max-w-md mx-auto">
-                  <p className="text-sm font-bold text-gray-300 mb-2">Perfect Score Breakdown:</p>
+                  <p className="text-sm font-bold text-gray-300 mb-2">
+                    {difficulty === 'easy' ? 'Easy Mode Score:' : 'Perfect Score Breakdown:'}
+                  </p>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Subreddit ({guessedSubreddit}):</span>
-                      <span className="text-green-400">+100</span>
+                      <span className="text-green-400">{difficulty === 'easy' ? '+200' : '+100'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Year ({guessedYear}):</span>
-                      <span className="text-green-400">+100</span>
-                    </div>
+                    {difficulty === 'difficult' && (
+                      <div className="flex justify-between">
+                        <span>Year ({guessedYear}):</span>
+                        <span className="text-green-400">+100</span>
+                      </div>
+                    )}
+                    {difficulty === 'easy' && (
+                      <div className="flex justify-between text-green-300">
+                        <span>Easy Mode Bonus:</span>
+                        <span className="text-green-400">Double points!</span>
+                      </div>
+                    )}
                     <div className="border-t border-gray-600 pt-1 flex justify-between font-bold">
                       <span>Total:</span>
-                      <span className="text-green-400">+200</span>
+                      <span className="text-green-400">+{lastScore}</span>
                     </div>
                   </div>
                 </div>
@@ -1890,16 +1312,19 @@ export const App = () => {
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Subreddit ({guessedSubreddit}):</span>
-                      <span className={guessedSubreddit.toLowerCase() === currentPost?.subreddit.toLowerCase() ? 'text-green-400' : 'text-red-400'}>
-                        {guessedSubreddit.toLowerCase() === currentPost?.subreddit.toLowerCase() ? '+100' : '+0'}
+                      <span className={guessedSubreddit.toLowerCase() === revealedAnswer?.subreddit.toLowerCase() ? 'text-green-400' : 'text-red-400'}>
+                        {guessedSubreddit.toLowerCase() === revealedAnswer?.subreddit.toLowerCase() ? 
+                          (difficulty === 'easy' ? '+200' : '+100') : '+0'}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Year ({guessedYear}):</span>
-                      <span className={guessedYear === currentPost?.year ? 'text-green-400' : 'text-orange-400'}>
-                        {currentPost ? `+${Math.max(0, 100 - (Math.abs(guessedYear - currentPost.year) * 20))}` : '+0'}
-                      </span>
-                    </div>
+                    {difficulty === 'difficult' && (
+                      <div className="flex justify-between">
+                        <span>Year ({guessedYear}):</span>
+                        <span className={guessedYear === revealedAnswer?.year ? 'text-green-400' : 'text-orange-400'}>
+                          {revealedAnswer ? `+${Math.max(0, 100 - (Math.abs(guessedYear - revealedAnswer.year) * 20))}` : '+0'}
+                        </span>
+                      </div>
+                    )}
                     <div className="border-t border-gray-600 pt-1 flex justify-between font-bold">
                       <span>Total:</span>
                       <span className="text-orange-400">+{lastScore}</span>
@@ -2048,7 +1473,7 @@ export const App = () => {
   // Game screen
   if (currentScreen === 'game' && currentPost) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-4 relative">
+      <div className={`min-h-screen bg-gray-900 text-white p-4 relative ${screenShake || ''}`}>
         {/* Achievement Notification */}
         {showAchievement && (
           <div className="fixed top-4 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-4 py-3 rounded-lg shadow-lg z-50 max-w-xs">
@@ -2057,49 +1482,57 @@ export const App = () => {
         )}
 
         <div className="max-w-4xl mx-auto">
-          {/* Header with Streak System */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-orange-500">Reddit Guesser</h1>
-              {gameMode === 'multiplayer' && (
-                <div>
-                  <p className="text-sm text-blue-400">🎮 Multiplayer • Room: {multiplayerRoom?.code}</p>
-                  <p className="text-sm text-purple-400">Round {multiplayerRound}/5</p>
-                </div>
-              )}
-            </div>
-
-            {/* STREAK DISPLAY - The dopamine center! */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="text-center">
-                <div className={`text-2xl sm:text-3xl font-bold ${currentStreak > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                  🔥 {currentStreak}
-                </div>
-                <p className="text-xs text-gray-400">Current Streak</p>
+          {/* Mobile-First Header */}
+          <div className="mb-4">
+            {/* Title and Timer Row */}
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={goToMenu}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  title="Back to Menu"
+                >
+                  ← Back
+                </button>
+                <h1 className="text-lg font-bold text-orange-500">Reddit Guesser</h1>
               </div>
-
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold text-blue-400">
-                  🎯 {totalCorrect}
-                </div>
-                <p className="text-xs text-gray-400">Total Correct</p>
-              </div>
-
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold text-purple-400">
-                  👑 {bestStreak}
-                </div>
-                <p className="text-xs text-gray-400">Best Streak</p>
-              </div>
-
               {timerActive && (
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">⏱️</span>
-                  <span className={`text-lg font-bold ${gameTimer <= 10 ? 'text-red-400' : 'text-orange-400'}`}>
+                <div className="flex items-center gap-1">
+                  <span className="text-lg">⏱️</span>
+                  <span className={`text-base font-bold ${gameTimer <= 10 ? 'text-red-400' : 'text-orange-400'}`}>
                     {gameTimer}s
                   </span>
                 </div>
               )}
+            </div>
+
+            {/* Multiplayer Info */}
+            {gameMode === 'multiplayer' && (
+              <div className="text-xs text-blue-400 mb-2">
+                🎮 Room: {multiplayerRoom?.code} • Round {multiplayerRound}/5
+              </div>
+            )}
+
+            {/* Stats Row - Compact for Mobile */}
+            <div className="flex justify-between items-center text-center">
+              <div className="flex-1">
+                <div className={`text-lg font-bold ${currentStreak > 0 ? 'text-green-400' : 'text-gray-400'}`}>
+                  🔥 {currentStreak}
+                </div>
+                <p className="text-xs text-gray-400">Streak</p>
+              </div>
+              <div className="flex-1">
+                <div className="text-lg font-bold text-blue-400">
+                  🎯 {totalCorrect}
+                </div>
+                <p className="text-xs text-gray-400">Correct</p>
+              </div>
+              <div className="flex-1">
+                <div className="text-lg font-bold text-purple-400">
+                  👑 {bestStreak}
+                </div>
+                <p className="text-xs text-gray-400">Best</p>
+              </div>
             </div>
           </div>
 
@@ -2120,63 +1553,60 @@ export const App = () => {
             </div>
           )}
 
-          {/* Mystery Post */}
-          <div className="bg-gray-800 rounded-lg p-6 mb-6 border-l-4 border-orange-500">
-            <div className="flex items-start gap-4">
-              <div className="flex flex-col items-center text-gray-400">
-                <button className="hover:text-orange-500 transition-colors">▲</button>
-                <span className="font-bold text-lg py-1">
-                  {currentPost.upvotes > 0 ? '+' : ''}{(currentPost.upvotes || 0).toLocaleString()}
+          {/* Mystery Post - Mobile Optimized */}
+          <div className="bg-gray-800 rounded-lg p-4 mb-4 border-l-4 border-orange-500">
+            {/* Post Header */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-orange-400 font-bold text-sm">r/???</span>
+                <span className="text-gray-500">•</span>
+                <span className="text-gray-400 text-xs">u/[REDACTED]</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-400">
+                <span className="text-sm">▲</span>
+                <span className="text-sm font-bold">
+                  {currentPost.upvotes > 0 ? '+' : ''}{Math.abs(currentPost.upvotes || 0) > 1000 ?
+                    `${Math.round((currentPost.upvotes || 0) / 1000)}k` :
+                    (currentPost.upvotes || 0).toLocaleString()}
                 </span>
-                <button className="hover:text-blue-500 transition-colors">▼</button>
+                <span className="text-sm">▼</span>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-orange-400 font-bold">r/???</span>
-                  <span className="text-gray-500">•</span>
-                  <span className="text-gray-400">Posted by u/[REDACTED]</span>
-                  <span className="text-gray-500">•</span>
-                  <span className="text-gray-400">
-                    {currentPost.year >= 2020 ? '🆕 Recent' :
-                      currentPost.year >= 2015 ? '📱 Smartphone Era' :
-                        currentPost.year >= 2010 ? '🌐 Social Media Boom' :
-                          '🏛️ Early Internet'}
+            </div>
+
+            {/* Post Content */}
+            <p className="text-base font-medium mb-3 text-white leading-relaxed">"{currentPost.content}"</p>
+
+            {/* Context Box */}
+            <div className="bg-gray-700 rounded p-3 mb-3">
+              <p className="text-sm text-gray-300 mb-2">💡 {currentPost.context || 'No context available'}</p>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">
+                  Mode: <span className={`font-bold ${difficulty === 'easy' ? 'text-green-400' : 'text-red-400'}`}>
+                    {difficulty === 'easy' ? '🟢 EASY' : '🔴 DIFFICULT'}
                   </span>
-                  {isLoadingRedditData && (
-                    <span className="text-xs text-blue-400">Loading live data...</span>
-                  )}
-                </div>
-                <p className="text-lg font-medium mb-4 text-white leading-relaxed">"{currentPost.content}"</p>
-                <div className="bg-gray-700 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-gray-300 italic">Context: {currentPost.context || 'No context available'}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <p className="text-xs text-gray-400">Difficulty: <span className={`font-bold ${(currentPost.difficulty || 'medium') === 'easy' ? 'text-green-400' :
-                      (currentPost.difficulty || 'medium') === 'medium' ? 'text-yellow-400' :
-                        (currentPost.difficulty || 'medium') === 'hard' ? 'text-orange-400' :
-                          'text-red-400'
-                      }`}>{(currentPost.difficulty || 'medium').toUpperCase()}</span></p>
-                    <p className="text-xs text-blue-400">
-                      Era: {currentPost.year >= 2020 ? '🆕 Recent' :
-                        currentPost.year >= 2015 ? '📱 Smartphone Era' :
-                          currentPost.year >= 2010 ? '🌐 Social Media Boom' :
-                            '🏛️ Early Internet'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4 text-sm text-gray-400">
-                  <span>💬 {(currentPost.upvotes || 0) > 0 ? Math.floor((currentPost.upvotes || 0) * 0.1) : Math.floor(Math.abs(currentPost.upvotes || 0) * 0.05)} comments</span>
-                  <span>🔗 Share</span>
-                  <span>💾 Save</span>
-                  <span>🏆 Award</span>
-                </div>
+                </span>
+                <span className="text-blue-400">
+                  {currentPost.year >= 2020 ? '🆕 Recent' :
+                    currentPost.year >= 2015 ? '📱 Smartphone Era' :
+                      currentPost.year >= 2010 ? '🌐 Social Media Boom' :
+                        '🏛️ Early Internet'}
+                </span>
               </div>
+            </div>
+
+            {/* Post Actions */}
+            <div className="flex justify-between text-xs text-gray-400">
+              <span>💬 {(currentPost.upvotes || 0) > 0 ? Math.floor((currentPost.upvotes || 0) * 0.1) : Math.floor(Math.abs(currentPost.upvotes || 0) * 0.05)}</span>
+              <span>🔗 Share</span>
+              <span>💾 Save</span>
+              <span>🏆 Award</span>
             </div>
           </div>
 
           {/* Guess Form */}
           <div className="grid gap-4 mb-6">
             <div>
-              <label className="block text-base sm:text-lg mb-4 text-gray-300">Guess the subreddit:</label>
+              <label className="block text-base mb-3 text-gray-300">Guess the subreddit:</label>
               {subredditOptions.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {subredditOptions.map((option, index) => (
@@ -2199,41 +1629,52 @@ export const App = () => {
               )}
             </div>
 
-            <div>
-              <label className="block text-base sm:text-lg mb-2 text-gray-300">Guess the year:</label>
-              <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setGuessedYear(Math.max(2005, guessedYear - 1))}
-                  className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors text-xl"
-                >
-                  -
-                </button>
-                <span className="text-2xl sm:text-3xl font-bold text-white w-20 text-center">{guessedYear}</span>
-                <button
-                  onClick={() => setGuessedYear(Math.min(2024, guessedYear + 1))}
-                  className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors text-xl"
-                >
-                  +
-                </button>
-              </div>
-              <div className="mt-2 text-center">
-                <input
-                  type="range"
-                  min="2005"
-                  max="2024"
-                  value={guessedYear}
-                  onChange={(e) => setGuessedYear(parseInt(e.target.value, 10))}
-                  className="w-full max-w-md mx-auto slider"
-                />
-                <div className="flex justify-between text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                  <span>2005</span>
-                  <span>2010</span>
-                  <span>2015</span>
-                  <span>2020</span>
-                  <span>2024</span>
+            {/* Year Selection - Hidden in Easy Mode */}
+            {difficulty === 'difficult' && (
+              <div>
+                <label className="block text-base mb-3 text-gray-300">Guess the year:</label>
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <button
+                    onClick={() => setGuessedYear(Math.max(2005, guessedYear - 1))}
+                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded transition-colors text-lg"
+                  >
+                    -
+                  </button>
+                  <span className="text-xl font-bold text-white w-16 text-center">{guessedYear}</span>
+                  <button
+                    onClick={() => setGuessedYear(Math.min(2024, guessedYear + 1))}
+                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded transition-colors text-lg"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="text-center">
+                  <input
+                    type="range"
+                    min="2005"
+                    max="2024"
+                    value={guessedYear}
+                    onChange={(e) => setGuessedYear(parseInt(e.target.value, 10))}
+                    className="w-full slider"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>2005</span>
+                    <span>2015</span>
+                    <span>2024</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Easy Mode Indicator */}
+            {difficulty === 'easy' && (
+              <div className="bg-green-900 bg-opacity-50 rounded-lg p-4 border border-green-600">
+                <div className="text-center">
+                  <span className="text-green-400 font-bold">🟢 Easy Mode</span>
+                  <p className="text-green-300 text-sm mt-1">Just guess the subreddit - no year required!</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="text-center">
@@ -2306,7 +1747,15 @@ export const App = () => {
             </div>
 
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4 text-green-400">📡 Recent Guesses</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-green-400">📡 Recent Guesses</h2>
+                <button
+                  onClick={fetchCommunityGuesses}
+                  className="bg-green-600 hover:bg-green-700 text-white text-sm py-1 px-3 rounded transition-colors"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {recentGuesses.length === 0 ? (
                   <p className="text-center text-gray-400 py-4">No recent guesses. Be the first!</p>
@@ -2315,7 +1764,9 @@ export const App = () => {
                     <div key={index} className="bg-gray-700 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-bold text-orange-400">{guess.username}</span>
-                        <span className="text-sm text-gray-400">{guess.timestamp}</span>
+                        <span className="text-sm text-gray-400">
+                          {new Date(guess.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
                       <p className="text-sm text-gray-300 mb-2">"{guess.post}"</p>
                       <div className="flex justify-between items-center">
@@ -2514,11 +1965,11 @@ export const App = () => {
                 <div className="bg-gray-700 rounded-lg p-4">
                   <h3 className="text-lg font-bold text-blue-400 mb-2">🏆 Sample Post</h3>
                   <div className="bg-gray-900 rounded p-3 text-sm">
-                    <p className="text-orange-400 mb-1">r/??? • Posted by u/[REDACTED] • 2017</p>
-                    <p className="text-white mb-2">"The intent is to provide players with a sense of pride and accomplishment..."</p>
-                    <p className="text-gray-400 text-xs">💬 -667,000 upvotes • Most downvoted comment in Reddit history</p>
+                    <p className="text-orange-400 mb-1">r/??? • Posted by u/[REDACTED] • Year: ????</p>
+                    <p className="text-white mb-2">"This is an example of a legendary Reddit post that shaped internet culture..."</p>
+                    <p className="text-gray-400 text-xs">💬 ??? upvotes • Famous internet moment</p>
                   </div>
-                  <p className="text-green-400 text-sm mt-2">Answer: r/StarWarsBattlefront</p>
+                  <p className="text-green-400 text-sm mt-2">Answer: r/ExampleSubreddit (This is just a demo)</p>
                 </div>
               </div>
             </div>
@@ -2654,6 +2105,8 @@ export const App = () => {
       </div>
     );
   }
+
+
 
   return <div>Loading...</div>;
 };

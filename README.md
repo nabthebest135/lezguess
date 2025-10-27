@@ -13,21 +13,38 @@ LezGuess is the ultimate nostalgia trip through Reddit's most legendary moments.
 - **Achievement System**: Unlock badges for Reddit history mastery
 
 ### Game Modes
-- **Solo Challenge**: Practice and improve your Reddit knowledge
+- **Solo Challenge**: Practice and improve your Reddit knowledge with streak system
 - **Daily Tournament**: One chance per day to climb the global leaderboard
 - **Multiplayer Battles**: Real-time competition with other players
 
+### Difficulty Levels
+- **🟢 Easy Mode**: Guess just the subreddit for 200 points - perfect for beginners!
+- **🔴 Difficult Mode**: Guess both subreddit and year for the full 200-point challenge
+
 ### Content
 - 50+ legendary Reddit posts spanning 2005-2024
-- Difficulty levels from beginner to Reddit historian
+- Adaptive difficulty system for all skill levels
 - Categories: Memes, Gaming, Controversies, Wholesome moments
 - Regular content updates with community suggestions
 
+### Enhanced User Experience
+- **Screen Shake Feedback**: Satisfying visual effects for correct answers
+- **Streak System**: Build momentum with consecutive correct guesses
+- **Smart Navigation**: Easy back button to return to menu anytime
+- **Responsive Design**: Optimized for mobile and desktop play
+
 ## 🏆 Scoring System
-- **Exact Subreddit Match**: 1000 points
-- **Year Accuracy**: Up to 1000 points (decreases by 200 per year off)
-- **Difficulty Bonus**: Extra points for expert-level posts
-- **Speed Bonus**: Quick guesses earn multipliers
+
+### Easy Mode (🟢)
+- **Subreddit Match**: 200 points for correct guess
+- **Perfect for beginners**: No year guessing required
+- **Screen shake reward**: Visual feedback for success
+
+### Difficult Mode (🔴)
+- **Subreddit Match**: 100 points for exact match
+- **Year Accuracy**: Up to 100 points (decreases by 20 per year off, max 5 years)
+- **Perfect Score**: 200 points for both subreddit and year correct
+- **Streak System**: Build momentum with consecutive perfect guesses
 
 ## 🛠 Technology Stack
 

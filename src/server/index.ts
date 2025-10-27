@@ -337,6 +337,444 @@ router.post('/api/multiplayer/start-game', async (req, res): Promise<void> => {
   }
 });
 
+// Mystery Reddit posts for the guessing game - SERVER SIDE ONLY
+const MYSTERY_POSTS = [
+  {
+    id: 1,
+    content: "The intent is to provide players with a sense of pride and accomplishment for unlocking different heroes. As for cost, we selected initial values based upon data from the Open Beta and other adjustments made to milestone rewards before launch. Among other things, we're looking at average per-player credit earn rates on a daily basis, and we'll be making constant adjustments to ensure that players have challenges that are compelling, rewarding, and of course attainable via gameplay.",
+    subreddit: "StarWarsBattlefront",
+    year: 2017,
+    context: "EA's response to microtransactions controversy - became most downvoted comment in Reddit history",
+    upvotes: -667000,
+    difficulty: "easy"
+  },
+  {
+    id: 2,
+    content: "BREAKING: We did it Reddit! Boston bomber caught! The FBI has confirmed that the suspect has been apprehended after an intensive manhunt. This is a victory for crowdsourced investigation and shows the power of the internet community working together to solve crimes.",
+    subreddit: "news",
+    year: 2013,
+    context: "Reddit's infamous misidentification during Boston Marathon bombing investigation",
+    upvotes: 3000,
+    difficulty: "hard"
+  },
+  {
+    id: 3,
+    content: "Holy shit, Keanu Reeves just walked out on stage at E3! He's in Cyberpunk 2077! When someone in the audience yelled 'You're breathtaking!' he pointed back and said 'No, you're breathtaking! You're all breathtaking!' This man is a treasure and CD Projekt Red just won E3.",
+    subreddit: "gaming",
+    year: 2019,
+    context: "E3 Cyberpunk 2077 announcement with Keanu Reeves surprise appearance",
+    upvotes: 89000,
+    difficulty: "medium"
+  },
+  {
+    id: 4,
+    content: "Question: 'If you could have sex with one person from history, who would it be?' Top answer: 'My wife. She passed away two years ago from cancer and I miss her every day.' Reply: 'I also choose this guy's dead wife.' *gets 45k upvotes*",
+    subreddit: "AskReddit",
+    year: 2017,
+    context: "Legendary dark humor response that became Reddit folklore",
+    upvotes: 45000,
+    difficulty: "medium"
+  },
+  {
+    id: 5,
+    content: "Thanks for the gold, kind stranger!",
+    subreddit: "circlejerk",
+    year: 2012,
+    context: "Classic Reddit gold response meme",
+    upvotes: 12000,
+    difficulty: "easy"
+  },
+  {
+    id: 6,
+    content: "Banana for scale",
+    subreddit: "pics",
+    year: 2013,
+    context: "Origin of the banana scale meme",
+    upvotes: 25000,
+    difficulty: "medium"
+  },
+  {
+    id: 7,
+    content: "Test post please ignore",
+    subreddit: "pics",
+    year: 2012,
+    context: "Most upvoted 'please ignore' post",
+    upvotes: 23000,
+    difficulty: "hard"
+  },
+  {
+    id: 8,
+    content: "Broken arms",
+    subreddit: "IAmA",
+    year: 2012,
+    context: "Infamous Reddit story reference",
+    upvotes: 15000,
+    difficulty: "hard"
+  },
+  {
+    id: 9,
+    content: "When does the narwhal bacon?",
+    subreddit: "reddit.com",
+    year: 2009,
+    context: "Early Reddit secret handshake",
+    upvotes: 8000,
+    difficulty: "expert"
+  },
+  {
+    id: 10,
+    content: "Geraffes are so dumb",
+    subreddit: "pics",
+    year: 2009,
+    context: "Classic misspelling that became legendary",
+    upvotes: 5000,
+    difficulty: "expert"
+  },
+  {
+    id: 11,
+    content: "Today you, tomorrow me",
+    subreddit: "AskReddit",
+    year: 2010,
+    context: "Heartwarming story about helping strangers",
+    upvotes: 15000,
+    difficulty: "medium"
+  },
+  {
+    id: 12,
+    content: "AND MY AXE!",
+    subreddit: "reddit.com",
+    year: 2011,
+    context: "Lord of the Rings meme explosion",
+    upvotes: 8000,
+    difficulty: "easy"
+  },
+  {
+    id: 13,
+    content: "The safe",
+    subreddit: "WhatsInThisThing",
+    year: 2013,
+    context: "Most anticipated safe opening in Reddit history",
+    upvotes: 25000,
+    difficulty: "hard"
+  },
+  {
+    id: 14,
+    content: "Cumbox",
+    subreddit: "AskReddit",
+    year: 2012,
+    context: "Infamous Reddit confession",
+    upvotes: 12000,
+    difficulty: "expert"
+  },
+  {
+    id: 15,
+    content: "Ice soap and 2am chili",
+    subreddit: "pics",
+    year: 2011,
+    context: "Peak Reddit life hack era",
+    upvotes: 18000,
+    difficulty: "hard"
+  },
+  {
+    id: 16,
+    content: "Lawyer up, delete Facebook, hit the gym",
+    subreddit: "relationship_advice",
+    year: 2010,
+    context: "Classic Reddit relationship advice trinity",
+    upvotes: 8500,
+    difficulty: "easy"
+  },
+  {
+    id: 17,
+    content: "This.",
+    subreddit: "reddit.com",
+    year: 2008,
+    context: "The birth of the most overused Reddit comment",
+    upvotes: 2000,
+    difficulty: "expert"
+  },
+  {
+    id: 18,
+    content: "OP's mom",
+    subreddit: "AskReddit",
+    year: 2009,
+    context: "The ultimate Reddit comeback",
+    upvotes: 15000,
+    difficulty: "easy"
+  },
+  {
+    id: 19,
+    content: "Username checks out",
+    subreddit: "funny",
+    year: 2012,
+    context: "When usernames perfectly match comments",
+    upvotes: 12000,
+    difficulty: "medium"
+  },
+  {
+    id: 20,
+    content: "Instructions unclear, got dick stuck in ceiling fan",
+    subreddit: "tifu",
+    year: 2013,
+    context: "Peak Reddit absurdist humor",
+    upvotes: 25000,
+    difficulty: "medium"
+  },
+  {
+    id: 21,
+    content: "Jolly Rancher",
+    subreddit: "AskReddit",
+    year: 2011,
+    context: "The story that scarred Reddit forever",
+    upvotes: 8000,
+    difficulty: "expert"
+  },
+  {
+    id: 22,
+    content: "Swamps of Dagobah",
+    subreddit: "AskReddit",
+    year: 2014,
+    context: "Medical horror story that became legend",
+    upvotes: 45000,
+    difficulty: "hard"
+  },
+  {
+    id: 23,
+    content: "Kevin",
+    subreddit: "AskReddit",
+    year: 2014,
+    context: "The dumbest student ever story",
+    upvotes: 35000,
+    difficulty: "medium"
+  },
+  {
+    id: 24,
+    content: "Streetlamp Le Moose",
+    subreddit: "AskReddit",
+    year: 2012,
+    context: "Legendary fictional character story",
+    upvotes: 28000,
+    difficulty: "hard"
+  },
+  {
+    id: 25,
+    content: "My family poops big. Like, really big. So big that our toilet would get clogged regularly. My dad kept an old rusty kitchen knife in the bathroom to chop up the turds so they would flush. We called it the poop knife. I thought every family had one until I was 22 and asked my girlfriend's family where their poop knife was. The silence was deafening.",
+    subreddit: "confession",
+    year: 2018,
+    context: "The most disturbing family secret that became a Reddit legend",
+    upvotes: 55000,
+    difficulty: "medium"
+  },
+  {
+    id: 26,
+    content: "TIFU by using a coconut as a... personal pleasure device. I'm a 16-year-old male and discovered that a coconut with a hole drilled in it makes for an interesting experience. After a week of use, I noticed a strange smell. When I cracked it open, it was full of rotting coconut flesh and maggots. I may have given myself an infection. Don't use coconuts, people.",
+    subreddit: "tifu",
+    year: 2017,
+    context: "The infamous coconut TIFU that traumatized Reddit",
+    upvotes: 85000,
+    difficulty: "easy"
+  },
+  {
+    id: 27,
+    content: "We did it Reddit!",
+    subreddit: "circlejerk",
+    year: 2013,
+    context: "Celebrating premature victories",
+    upvotes: 15000,
+    difficulty: "easy"
+  },
+  {
+    id: 28,
+    content: "The narwhal bacons at midnight",
+    subreddit: "reddit.com",
+    year: 2009,
+    context: "Secret Reddit meetup phrase",
+    upvotes: 12000,
+    difficulty: "expert"
+  },
+  {
+    id: 29,
+    content: "Tree fiddy",
+    subreddit: "funny",
+    year: 2010,
+    context: "South Park meme that took over Reddit",
+    upvotes: 20000,
+    difficulty: "medium"
+  },
+  {
+    id: 30,
+    content: "Mom's spaghetti",
+    subreddit: "hiphopheads",
+    year: 2012,
+    context: "Eminem lyrics became Reddit meme",
+    upvotes: 18000,
+    difficulty: "easy"
+  }
+];
+
+// Common subreddits for generating multiple choice options
+const COMMON_SUBREDDITS = [
+  'gaming', 'AskReddit', 'funny', 'pics', 'news', 'worldnews', 'todayilearned',
+  'movies', 'music', 'videos', 'IAmA', 'science', 'technology', 'politics',
+  'sports', 'television', 'books', 'food', 'DIY', 'LifeProTips', 'showerthoughts',
+  'mildlyinteresting', 'oddlysatisfying', 'wholesomememes', 'dankmemes',
+  'relationship_advice', 'tifu', 'confession', 'unpopularopinion', 'changemyview',
+  'explainlikeimfive', 'nostupidquestions', 'OutOfTheLoop', 'bestof',
+  'StarWarsBattlefront', 'circlejerk', 'WhatsInThisThing', 'legaladvice', 'reddit.com', 'hiphopheads'
+];
+
+// Generate multiple choice options for a post
+const generateMultipleChoice = (correctSubreddit: string, seed: string): string[] => {
+  if (!correctSubreddit) return [];
+  const options = [correctSubreddit];
+  const availableOptions = COMMON_SUBREDDITS.filter(sub => sub !== correctSubreddit);
+
+  // Use deterministic selection based on seed for consistent options
+  const optionSeed = seed + 'options';
+  let seedValue = optionSeed.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
+  
+  // Add 3 deterministic wrong options
+  while (options.length < 4 && availableOptions.length > 0) {
+    const index = seedValue % availableOptions.length;
+    const selectedOption = availableOptions[index];
+    if (selectedOption && !options.includes(selectedOption)) {
+      options.push(selectedOption);
+    }
+    availableOptions.splice(index, 1); // Remove to avoid duplicates
+    seedValue = Math.abs(seedValue * 1103515245 + 12345); // Simple LCG for next "random" number
+  }
+
+  // Deterministic shuffle based on seed
+  const shuffleSeed = seed + 'shuffle';
+  let shuffleValue = shuffleSeed.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = shuffleValue % (i + 1);
+    const temp = options[i];
+    if (options[j] !== undefined && temp !== undefined) {
+      options[i] = options[j]!; // Non-null assertion since we checked above
+      options[j] = temp;
+    }
+    shuffleValue = Math.abs(shuffleValue * 1103515245 + 12345);
+  }
+
+  return options;
+};
+
+// Get random post for solo/daily games
+router.get('/api/game/random-post', async (_req, res): Promise<void> => {
+  try {
+    const randomPost = MYSTERY_POSTS[Math.floor(Math.random() * MYSTERY_POSTS.length)];
+    
+    if (!randomPost) {
+      res.status(500).json({ status: 'error', message: 'No posts available' });
+      return;
+    }
+    
+    // Generate multiple choice options
+    const seed = Date.now().toString() + Math.random().toString();
+    const options = generateMultipleChoice(randomPost.subreddit, seed);
+    
+    // Return post without revealing the answer
+    const postForClient = {
+      id: randomPost.id,
+      content: randomPost.content,
+      context: randomPost.context,
+      upvotes: randomPost.upvotes,
+      difficulty: randomPost.difficulty
+      // Note: subreddit and year are NOT sent to client
+    };
+    
+    const answerId = `${randomPost.id}_${Date.now()}`;
+    
+    // Store the correct answer on server for validation
+    await redis.set(`post_answer_${answerId}`, JSON.stringify({
+      subreddit: randomPost.subreddit,
+      year: randomPost.year
+    }));
+    await redis.expire(`post_answer_${answerId}`, 300); // Expire after 5 minutes
+    
+    res.json({ 
+      status: 'success', 
+      post: postForClient, 
+      options,
+      answerId // Client needs this to submit answer
+    });
+  } catch (error) {
+    console.error('Get random post error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to get random post' });
+  }
+});
+
+// Validate guess against server-stored answer
+router.post('/api/game/validate-guess', async (req, res): Promise<void> => {
+  try {
+    const { answerId, guessedSubreddit, guessedYear, difficulty } = req.body;
+    
+    if (!answerId || !guessedSubreddit) {
+      res.status(400).json({ status: 'error', message: 'Missing required fields' });
+      return;
+    }
+    
+    // In easy mode, year is not required
+    if (difficulty !== 'easy' && !guessedYear) {
+      res.status(400).json({ status: 'error', message: 'Year is required in difficult mode' });
+      return;
+    }
+    
+    // Get the correct answer from server storage
+    const answerData = await redis.get(`post_answer_${answerId}`);
+    if (!answerData) {
+      res.status(400).json({ status: 'error', message: 'Answer session expired or invalid' });
+      return;
+    }
+    
+    const correctAnswer = JSON.parse(answerData);
+    
+    // Calculate score server-side
+    let score = 0;
+    
+    // Subreddit scoring (exact match = 100 points)
+    const isCorrectSubreddit = guessedSubreddit.toLowerCase() === correctAnswer.subreddit.toLowerCase();
+    if (isCorrectSubreddit) {
+      score += 100;
+    }
+    
+    // Year scoring (only in normal mode)
+    let isCorrectYear = false;
+    if (difficulty === 'easy') {
+      // In easy mode, always consider year "correct" for perfect score calculation
+      isCorrectYear = true;
+      // Give full points for subreddit in easy mode
+      if (isCorrectSubreddit) {
+        score += 100; // Total 200 points for correct subreddit in easy mode
+      }
+    } else {
+      // Difficult mode: year scoring (only award points if within 5 years, max 100)
+      isCorrectYear = guessedYear === correctAnswer.year;
+      const yearDiff = Math.abs(guessedYear - correctAnswer.year);
+      if (yearDiff <= 5) {
+        const yearScore = Math.max(0, 100 - (yearDiff * 20));
+        score += yearScore;
+      }
+    }
+    
+    // Clean up the stored answer
+    await redis.del(`post_answer_${answerId}`);
+    
+    res.json({
+      status: 'success',
+      score,
+      correctAnswer,
+      isCorrectSubreddit,
+      isCorrectYear,
+      isPerfect: isCorrectSubreddit && isCorrectYear,
+      difficulty
+    });
+  } catch (error) {
+    console.error('Validate guess error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to validate guess' });
+  }
+});
+
 // Get current round post for multiplayer
 router.get('/api/multiplayer/current-post/:roomCode', async (req, res): Promise<void> => {
   try {
@@ -352,75 +790,42 @@ router.get('/api/multiplayer/current-post/:roomCode', async (req, res): Promise<
     
     // Generate deterministic post based on room code and round
     const seed = roomCode + room.currentRound;
-    const postIndex = Math.abs(seed.split('').reduce((a, b) => a + b.charCodeAt(0), 0)) % 10; // Use first 10 posts for simplicity
+    const postIndex = Math.abs(seed.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % MYSTERY_POSTS.length;
     
-    // Simple post data - you can expand this
-    const posts = [
-      { id: 1, content: "The intent is to provide players with a sense of pride and accomplishment...", subreddit: "StarWarsBattlefront", year: 2017, difficulty: "easy", upvotes: -667000, context: "EA's response to microtransactions controversy" },
-      { id: 2, content: "BREAKING: We did it Reddit! Boston bomber caught!", subreddit: "news", year: 2013, difficulty: "hard", upvotes: 3000, context: "Reddit's infamous misidentification during Boston Marathon bombing" },
-      { id: 3, content: "Holy shit, Keanu Reeves just walked out on stage at E3!", subreddit: "gaming", year: 2019, difficulty: "medium", upvotes: 89000, context: "E3 Cyberpunk 2077 announcement with Keanu Reeves" },
-      { id: 4, content: "I also choose this guy's dead wife.", subreddit: "AskReddit", year: 2017, difficulty: "medium", upvotes: 45000, context: "Legendary dark humor response that became Reddit folklore" },
-      { id: 5, content: "Thanks for the gold, kind stranger!", subreddit: "circlejerk", year: 2012, difficulty: "easy", upvotes: 12000, context: "Classic Reddit gold response meme" },
-      { id: 6, content: "Banana for scale", subreddit: "pics", year: 2013, difficulty: "medium", upvotes: 25000, context: "Origin of the banana scale meme" },
-      { id: 7, content: "Test post please ignore", subreddit: "pics", year: 2012, difficulty: "hard", upvotes: 23000, context: "Most upvoted 'please ignore' post" },
-      { id: 8, content: "Broken arms", subreddit: "IAmA", year: 2012, difficulty: "hard", upvotes: 15000, context: "Infamous Reddit story reference" },
-      { id: 9, content: "When does the narwhal bacon?", subreddit: "reddit.com", year: 2009, difficulty: "expert", upvotes: 8000, context: "Early Reddit secret handshake" },
-      { id: 10, content: "Geraffes are so dumb", subreddit: "pics", year: 2009, difficulty: "expert", upvotes: 5000, context: "Classic misspelling that became legendary" }
-    ];
+    const selectedPost = MYSTERY_POSTS[postIndex];
     
-    const currentPost = posts[postIndex];
+    if (!selectedPost) {
+      res.status(500).json({ status: 'error', message: 'No post found for this round' });
+      return;
+    }
+    
     console.log(`Generating post for room ${roomCode}, round ${room.currentRound}, seed: ${seed}, postIndex: ${postIndex}`);
     
     // Generate deterministic multiple choice options
-    const commonSubreddits = [
-      'gaming', 'AskReddit', 'funny', 'pics', 'news', 'worldnews', 'todayilearned',
-      'movies', 'music', 'videos', 'IAmA', 'science', 'technology', 'politics',
-      'sports', 'television', 'books', 'food', 'DIY', 'LifeProTips', 'showerthoughts',
-      'mildlyinteresting', 'oddlysatisfying', 'wholesomememes', 'dankmemes',
-      'relationship_advice', 'tifu', 'confession', 'unpopularopinion', 'changemyview',
-      'explainlikeimfive', 'nostupidquestions', 'OutOfTheLoop', 'bestof',
-      'StarWarsBattlefront', 'circlejerk', 'WhatsInThisThing', 'legaladvice', 'reddit.com'
-    ];
+    const options = generateMultipleChoice(selectedPost.subreddit, seed);
     
-    const availableOptions = commonSubreddits.filter(sub => sub !== currentPost.subreddit);
-    const options = [currentPost.subreddit];
+    // Return post without revealing the answer
+    const postForClient = {
+      id: selectedPost.id,
+      content: selectedPost.content,
+      context: selectedPost.context,
+      upvotes: selectedPost.upvotes,
+      difficulty: selectedPost.difficulty
+      // Note: subreddit and year are NOT sent to client
+    };
     
-    // Use deterministic selection based on seed for consistent options
-    const optionSeed = seed + 'options';
-    let seedValue = optionSeed.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    
-    // Add 3 deterministic wrong options
-    while (options.length < 4 && availableOptions.length > 0) {
-      const index = seedValue % availableOptions.length;
-      const selectedOption = availableOptions[index];
-      if (!options.includes(selectedOption)) {
-        options.push(selectedOption);
-      }
-      availableOptions.splice(index, 1); // Remove to avoid duplicates
-      seedValue = Math.abs(seedValue * 1103515245 + 12345); // Simple LCG for next "random" number
-    }
-    
-    // Deterministic shuffle based on seed
-    const shuffleSeed = seed + 'shuffle';
-    let shuffleValue = shuffleSeed.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    for (let i = options.length - 1; i > 0; i--) {
-      const j = shuffleValue % (i + 1);
-      [options[i], options[j]] = [options[j], options[i]];
-      shuffleValue = Math.abs(shuffleValue * 1103515245 + 12345);
-    }
-    
-    console.log(`Generated options for ${currentPost.subreddit}:`, options);
-    res.json({ status: 'success', post: currentPost, options });
+    console.log(`Generated options for ${selectedPost.subreddit}:`, options);
+    res.json({ status: 'success', post: postForClient, options });
   } catch (error) {
     console.error('Get current post error:', error);
     res.status(500).json({ status: 'error', message: 'Failed to get current post' });
   }
 });
 
-// Submit multiplayer guess
+// Submit multiplayer guess - SERVER-SIDE VALIDATION
 router.post('/api/multiplayer/submit-guess', async (req, res): Promise<void> => {
   try {
-    const { roomCode, guess, score, username } = req.body;
+    const { roomCode, guessedSubreddit, guessedYear, username } = req.body;
     
     if (!username) {
       res.status(401).json({ status: 'error', message: 'Username required' });
@@ -435,6 +840,34 @@ router.post('/api/multiplayer/submit-guess', async (req, res): Promise<void> => 
 
     const room = JSON.parse(roomData);
     
+    // Get the correct answer for this room's current round
+    const seed = roomCode + room.currentRound;
+    const postIndex = Math.abs(seed.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % MYSTERY_POSTS.length;
+    const correctPost = MYSTERY_POSTS[postIndex];
+    
+    if (!correctPost) {
+      res.status(500).json({ status: 'error', message: 'No correct post found for this round' });
+      return;
+    }
+    
+    // Calculate score server-side (NO CLIENT TRUST)
+    let score = 0;
+    
+    // Subreddit scoring (exact match = 100 points)
+    const isCorrectSubreddit = guessedSubreddit.toLowerCase() === correctPost.subreddit.toLowerCase();
+    if (isCorrectSubreddit) {
+      score += 100;
+    }
+    
+    // Year scoring (only award points if within 5 years, max 100)
+    const yearDiff = Math.abs(guessedYear - correctPost.year);
+    if (yearDiff <= 5) {
+      const yearScore = Math.max(0, 100 - (yearDiff * 20));
+      score += yearScore;
+    }
+    
+    console.log(`Player ${username} guessed: r/${guessedSubreddit} ${guessedYear}, correct: r/${correctPost.subreddit} ${correctPost.year}, score: ${score}`);
+    
     // Mark player as submitted
     const playerIndex = room.players.findIndex((p: any) => p.username === username);
     if (playerIndex !== -1) {
@@ -442,11 +875,12 @@ router.post('/api/multiplayer/submit-guess', async (req, res): Promise<void> => 
       room.players[playerIndex].score += score;
     }
 
-    // Add guess to round guesses
+    // Add guess to round guesses with correct answer for results display
     room.roundGuesses.push({
       username,
-      guess,
+      guess: { subreddit: guessedSubreddit, year: guessedYear },
       score,
+      correctAnswer: { subreddit: correctPost.subreddit, year: correctPost.year },
       timestamp: Date.now()
     });
 
@@ -466,7 +900,13 @@ router.post('/api/multiplayer/submit-guess', async (req, res): Promise<void> => 
     }
 
     await redis.set(`room_${roomCode}`, JSON.stringify(room));
-    res.json({ status: 'success', room, allSubmitted });
+    res.json({ 
+      status: 'success', 
+      room, 
+      allSubmitted,
+      playerScore: score,
+      correctAnswer: { subreddit: correctPost.subreddit, year: correctPost.year }
+    });
   } catch (error) {
     console.error('Guess submission error:', error);
     res.status(500).json({ status: 'error', message: 'Failed to submit guess' });
@@ -622,6 +1062,58 @@ router.post('/api/game-completed', async (req, res): Promise<void> => {
     res.status(500).json({ status: 'error', message: 'Failed to update stats' });
   }
 });
+
+// Add guess to community feed
+router.post('/api/community/add-guess', async (req, res): Promise<void> => {
+  try {
+    const { username, post, guessedSubreddit, actualSubreddit, score } = req.body;
+    
+    const guessResult = {
+      username: username || 'Anonymous',
+      post: post.substring(0, 50) + "...",
+      guessedSubreddit,
+      actualSubreddit,
+      score,
+      timestamp: new Date().toISOString(),
+      id: Date.now() + Math.random() // Simple unique ID
+    };
+    
+    // Get current guesses
+    const currentGuessesStr = await redis.get('community_guesses') || '[]';
+    const currentGuesses = JSON.parse(currentGuessesStr);
+    
+    // Add new guess to the beginning and keep only last 50
+    currentGuesses.unshift(guessResult);
+    const limitedGuesses = currentGuesses.slice(0, 50);
+    
+    // Save back to Redis
+    await redis.set('community_guesses', JSON.stringify(limitedGuesses));
+    
+    console.log(`Added community guess from ${username}: ${guessedSubreddit} (${score} pts)`);
+    res.json({ status: 'success' });
+  } catch (error) {
+    console.error('Add guess error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to add guess' });
+  }
+});
+
+// Get community feed
+router.get('/api/community/recent-guesses', async (req, res): Promise<void> => {
+  try {
+    const guessesStr = await redis.get('community_guesses') || '[]';
+    const guesses = JSON.parse(guessesStr);
+    
+    res.json({ 
+      status: 'success', 
+      guesses: guesses.slice(0, 20) // Return last 20 guesses
+    });
+  } catch (error) {
+    console.error('Get community guesses error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to get community guesses' });
+  }
+});
+
+
 
 router.post<{ postId: string }, IncrementResponse | { status: string; message: string }, unknown>(
   '/api/increment',

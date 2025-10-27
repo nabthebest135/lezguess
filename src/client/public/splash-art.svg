@@ -1,0 +1,44 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f7931e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff4757;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="reddit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff4500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#bg)" rx="64"/>
+  
+  <!-- Reddit alien silhouette -->
+  <circle cx="256" cy="200" r="80" fill="white" opacity="0.1"/>
+  <circle cx="230" cy="180" r="8" fill="white" opacity="0.3"/>
+  <circle cx="282" cy="180" r="8" fill="white" opacity="0.3"/>
+  
+  <!-- Magnifying glass -->
+  <circle cx="350" cy="150" r="40" fill="none" stroke="white" stroke-width="8" opacity="0.9"/>
+  <line x1="380" y1="180" x2="420" y2="220" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  
+  <!-- Question marks floating -->
+  <text x="150" y="120" font-family="Arial Black" font-size="48" fill="white" opacity="0.6">?</text>
+  <text x="380" y="100" font-family="Arial Black" font-size="36" fill="white" opacity="0.4">?</text>
+  <text x="100" y="350" font-family="Arial Black" font-size="42" fill="white" opacity="0.5">?</text>
+  
+  <!-- Game title -->
+  <text x="256" y="320" font-family="Arial Black" font-size="48" fill="white" text-anchor="middle" font-weight="900">LEZ</text>
+  <text x="256" y="370" font-family="Arial Black" font-size="48" fill="#ffeb3b" text-anchor="middle" font-weight="900">GUESS</text>
+  
+  <!-- Subtitle -->
+  <text x="256" y="420" font-family="Arial" font-size="18" fill="white" text-anchor="middle" opacity="0.8">Reddit History Challenge</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="80" cy="80" r="4" fill="white" opacity="0.6"/>
+  <circle cx="430" cy="430" r="6" fill="white" opacity="0.4"/>
+  <circle cx="450" cy="80" r="3" fill="white" opacity="0.7"/>
+  <circle cx="60" cy="450" r="5" fill="white" opacity="0.5"/>
+</svg>
